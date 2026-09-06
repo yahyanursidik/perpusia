@@ -7,6 +7,8 @@ import {
   S3_SECRET_ACCESS_KEY,
 } from "astro:env/server";
 
+const runtimeEnvironment = typeof process === "undefined" ? {} : process.env;
+
 export interface StorageEnvironment {
   accessKeyId: string;
   bucket: string;
@@ -17,12 +19,14 @@ export interface StorageEnvironment {
 }
 
 const storageValues = {
-  accessKeyId: S3_ACCESS_KEY_ID,
-  bucket: S3_BUCKET,
-  endpoint: S3_ENDPOINT,
-  publicBaseUrl: S3_PUBLIC_BASE_URL,
-  region: S3_REGION,
-  secretAccessKey: S3_SECRET_ACCESS_KEY,
+  // Vercel injects secret values into the serverless runtime. Astro's typed
+  // environment values remain the local-development fallback.
+  accessKeyId: runtimeEnvironment.S3_ACCESS_KEY_ID || S3_ACCESS_KEY_ID,
+  bucket: runtimeEnvironment.S3_BUCKET || S3_BUCKET,
+  endpoint: runtimeEnvironment.S3_ENDPOINT || S3_ENDPOINT,
+  publicBaseUrl: runtimeEnvironment.S3_PUBLIC_BASE_URL || S3_PUBLIC_BASE_URL,
+  region: runtimeEnvironment.S3_REGION || S3_REGION,
+  secretAccessKey: runtimeEnvironment.S3_SECRET_ACCESS_KEY || S3_SECRET_ACCESS_KEY,
 };
 
 export function getStorageEnvironment(): StorageEnvironment {
