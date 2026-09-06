@@ -1,0 +1,38 @@
+{
+  "name": "perpustakaan-islam-digital",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@11.22.0",
+  "scripts": {
+    "dev": "cross-env ASTRO_TELEMETRY_DISABLED=1 astro dev",
+    "build": "cross-env ASTRO_TELEMETRY_DISABLED=1 astro build",
+    "preview": "cross-env ASTRO_TELEMETRY_DISABLED=1 astro preview",
+    "lint": "eslint .",
+    "check": "cross-env ASTRO_TELEMETRY_DISABLED=1 astro check",
+    "book:convert": "node scripts/books/convert-local.mjs",
+    "book:upload": "node --env-file=.env scripts/books/upload.mjs",
+    "book:publish": "node --env-file=.env scripts/books/publish.mjs",
+    "book:make-public": "node --env-file=.env scripts/books/make-public.mjs",
+    "storage:check": "node --env-file=.env scripts/storage/check.mjs"
+  },
+  "dependencies": {
+    "@astrojs/vercel": "^11.0.10",
+    "@aws-sdk/client-s3": "^3.1127.0",
+    "@aws-sdk/lib-storage": "^3.1127.0",
+    "@tailwindcss/vite": "^4.3.3",
+    "astro": "^7.3.1",
+    "epubjs": "^0.3.93",
+    "tailwindcss": "^4.3.3"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.10",
+    "@eslint/js": "^10.0.1",
+    "@types/node": "^26.4.1",
+    "cross-env": "^10.1.0",
+    "eslint": "^10.9.1",
+    "eslint-plugin-astro": "^3.1.0",
+    "typescript": "^6.0.0",
+    "typescript-eslint": "^8.69.0"
+  }
+}

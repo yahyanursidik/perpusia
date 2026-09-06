@@ -1,0 +1,99 @@
+---
+import BookCover from "../../components/BookCover.astro";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { getCategoryLabel } from "../../lib/books/categories";
+import { getReadingTimeLabel, getVisibleBooks } from "../../lib/books/queries";
+import "../../styles/catalogue.css";
+
+export const prerender = false;
+
+const slug = Astro.params.slug ?? "";
+const book = (await getVisibleBooks()).find(({ data }) => data.slug === slug);
+if (!book) return Astro.redirect("/library/");
+const primaryCategory = book.data.categories[0]!;
+const categoryLabel = getCategoryLabel(primaryCategory);
+const verificationLabel = book.data.verification.status === "verified" ? "Terverifikasi" : "Perlu verifikasi";
+---
+
+<BaseLayout
+  title={`${book.data.title} — Perpustakaan Islam Digital`}
+  description={book.data.description}
+>
+  <article class="catalogue-shell">
+    <nav class="breadcrumbs" aria-label="Breadcrumb">
+      <a href="/library/">Perpustakaan</a>
+      <span aria-hidden="true">/</span>
+      <span>{book.data.title}</span>
+    </nav>
+
+    <div class="book-detail book-detail--enhanced">
+      <div class="book-detail__cover-area">
+        <BookCover
+          title={book.data.title}
+          category={categoryLabel}
+          mock={book.data.mock}
+          preview={book.data.preview}
+          cover={book.data.storage.cover}
+        />
+        {book.data.storage.epub && <p class="book-detail__availability">EPUB tersedia untuk dibaca</p>}
+      </div>
+      <div class="book-detail__main">
+        <p class="book-detail__eyebrow">Ebook · {categoryLabel}</p>
+        <h1>{book.data.title}</h1>
+        <p class="book-detail__author">{book.data.authors.join(", ")}</p>
+        <div class="book-detail__chips" aria-label="Ringkasan buku">
+          <span>{book.data.language.join(", ")}</span>
+          <a href={`/category/${primaryCategory}/`}>{categoryLabel}</a>
+        </div>
+        <p class="book-detail__description">{book.data.description}</p>
+
+        {book.data.storage.epub && (
+          <div class="book-detail__actions">
+            <a class="book-detail__read" href={`/read/${book.data.slug}/`}>Baca sekarang <span aria-hidden="true">→</span></a>
+            <a class="book-detail__secondary" href="/library/">Kembali ke koleksi</a>
+          </div>
+        )}
+
+        {book.data.mock && (
+          <p class="book-detail__status">Data demonstrasi—belum tersedia untuk dibaca.</p>
+        )}
+        {book.data.preview && (
+          <p class="book-detail__status">
+            Pratinjau editorial—sumber dan metadata masih perlu diverifikasi; EPUB belum tersedia untuk dibaca.
+          </p>
+        )}
+        {!book.data.mock && !book.data.preview && !book.data.storage.epub && (
+          <p class="book-detail__status">
+            Entri katalog telah diterbitkan. Berkas EPUB masih disiapkan untuk akses baca.
+          </p>
+        )}
+
+        <section class="book-detail__metadata" aria-labelledby="book-info-title">
+          <h2 id="book-info-title">Informasi buku</h2>
+          <dl class="book-facts">
+          <div>
+            <dt>Kategori</dt>
+            <dd><a href={`/category/${primaryCategory}/`}>{categoryLabel}</a></dd>
+          </div>
+          <div>
+            <dt>Bahasa</dt>
+            <dd>{book.data.language.join(", ")}</dd>
+          </div>
+          <div>
+            <dt>Waktu baca</dt>
+            <dd>{getReadingTimeLabel(book.data.reading.estimatedMinutes)}</dd>
+          </div>
+          <div>
+            <dt>Sumber</dt>
+            <dd>{book.data.source.publisher}</dd>
+          </div>
+          <div>
+            <dt>Status</dt>
+            <dd>{verificationLabel}</dd>
+          </div>
+          </dl>
+        </section>
+      </div>
+    </div>
+  </article>
+</BaseLayout>

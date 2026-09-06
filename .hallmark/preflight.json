@@ -1,0 +1,10 @@
+{
+  "date": "2026-09-05",
+  "signals": {
+    "framework": "Astro 7 + Tailwind CSS 4",
+    "fontStack": "Georgia display + system sans-serif body",
+    "palette": "warm paper, soft ink, restrained green accent",
+    "motion": "motion-cut",
+    "spacing": "4px-derived token scale"
+  }
+}

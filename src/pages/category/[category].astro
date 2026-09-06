@@ -1,0 +1,46 @@
+---
+import BookCard from "../../components/BookCard.astro";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { BOOK_CATEGORIES, getCategoryLabel, type BookCategory } from "../../lib/books/categories";
+import { getBooksByCategory, getVisibleBooks } from "../../lib/books/queries";
+import "../../styles/catalogue.css";
+
+export const prerender = false;
+
+const category = Astro.params.category as BookCategory;
+if (!BOOK_CATEGORIES.includes(category)) return Astro.redirect("/category/");
+const books = getBooksByCategory(await getVisibleBooks(), category);
+const categoryLabel = getCategoryLabel(category);
+---
+
+<BaseLayout
+  title={`${categoryLabel} — Perpustakaan Islam Digital`}
+  description={`Jelajahi buku dalam kategori ${categoryLabel}.`}
+>
+  <section class="catalogue-shell" aria-labelledby="category-title">
+    <nav class="breadcrumbs" aria-label="Breadcrumb">
+      <a href="/category/">Kategori</a>
+      <span aria-hidden="true">/</span>
+      <span>{categoryLabel}</span>
+    </nav>
+    <header class="catalogue-head">
+      <div>
+        <p class="catalogue-count">{books.length} buku</p>
+        <h1 id="category-title">{categoryLabel}</h1>
+      </div>
+      <p>Koleksi berdasarkan taxonomy editorial. Pengelompokan dapat diperbarui setelah review konten.</p>
+    </header>
+
+    {books.length > 0 ? (
+      <div class="book-grid">
+        {books.map((book) => <BookCard book={book} />)}
+      </div>
+    ) : (
+      <div class="empty-state">
+        <h2>Belum ada buku dalam kategori ini.</h2>
+        <p>Buku akan muncul setelah metadata dan status publikasinya siap.</p>
+        <a class="text-link" href="/library/">Buka perpustakaan</a>
+      </div>
+    )}
+  </section>
+</BaseLayout>

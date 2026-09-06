@@ -1,0 +1,41 @@
+---
+import BookCard from "../../components/BookCard.astro";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { getVisibleBooks } from "../../lib/books/queries";
+import "../../styles/catalogue.css";
+
+const query = Astro.url.searchParams.get("q")?.trim().toLocaleLowerCase("id") ?? "";
+const allBooks = await getVisibleBooks();
+const books = query
+  ? allBooks.filter((book) => [book.data.title, ...book.data.authors, ...book.data.tags, ...book.data.categories].join(" ").toLocaleLowerCase("id").includes(query))
+  : allBooks;
+---
+
+<BaseLayout
+  title="Perpustakaan — Perpustakaan Islam Digital"
+  description="Jelajahi katalog buku di Perpustakaan Islam Digital."
+>
+  <section class="catalogue-shell" aria-labelledby="library-title">
+    <header class="catalogue-head">
+      <div>
+        <p class="catalogue-count">{books.length} entri katalog</p>
+        <h1 id="library-title">{query ? `Hasil pencarian` : "Koleksi"}</h1>
+      </div>
+      <p>
+        {query ? `Menampilkan buku yang sesuai dengan “${query}”.` : "Temukan karya pilihan berdasarkan judul, penulis, atau kategori."}
+      </p>
+    </header>
+
+    {books.length > 0 ? (
+      <div class="book-grid">
+        {books.map((book) => <BookCard book={book} />)}
+      </div>
+    ) : (
+      <div class="empty-state">
+        <h2>Belum ada buku yang diterbitkan.</h2>
+        <p>Metadata buku akan muncul di sini setelah lolos verifikasi editorial.</p>
+        <a class="text-link" href="/category/">Lihat kategori</a>
+      </div>
+    )}
+  </section>
+</BaseLayout>

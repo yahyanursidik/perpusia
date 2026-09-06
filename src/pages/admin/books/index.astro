@@ -1,0 +1,355 @@
+---
+import { getCollection } from "astro:content";
+
+import BookCover from "../../../components/BookCover.astro";
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+import { getCategoryLabel } from "../../../lib/books/categories";
+import { getAdminBooks } from "../../../lib/books/content-file";
+import { listDraftBooks } from "../../../lib/books/drafts";
+import { ContaboS3Storage } from "../../../lib/storage";
+import "../../../styles/admin-library.css";
+
+export const prerender = false;
+
+const books = await getAdminBooks(await getCollection("books"), await listDraftBooks());
+const archivedCount = books.filter(({ data }) => data.publication.status === "archived").length;
+const reviewCount = books.filter(({ data }) => data.publication.status === "needs-review" || data.verification.status === "needs-review").length;
+const realCount = books.filter(({ data }) => !data.mock).length;
+const mockCount = books.filter(({ data }) => data.mock).length;
+const statusLabels: Record<string, string> = {
+  published: "Terbit",
+  archived: "Diarsipkan",
+  verified: "Terverifikasi",
+  "needs-review": "Perlu ditinjau",
+  converted: "Sudah dikonversi",
+  imported: "Diimpor",
+  extracting: "Diproses",
+  discovered: "Ditemukan",
+};
+
+type EpubStorageState = { label: string; detail: string };
+
+async function inspectEpubStorage(entries: typeof books): Promise<Map<string, EpubStorageState>> {
+  const results = new Map<string, EpubStorageState>();
+  const candidates = entries.filter(({ data }) => Boolean(data.storage.epub));
+
+  candidates.forEach(({ data }) => results.set(data.slug, { label: "Belum diperiksa", detail: "Menunggu pemeriksaan object storage." }));
+  if (candidates.length === 0) return results;
+
+  try {
+    const storage = new ContaboS3Storage();
+    await Promise.all(candidates.map(async ({ data }) => {
+      try {
+        const metadata = await storage.getMetadata(data.storage.epub!);
+        if (!metadata) {
+          results.set(data.slug, { label: "Tidak ditemukan", detail: "Path EPUB tercatat, tetapi objek tidak ada di S3." });
+          return;
+        }
+        const size = metadata.contentLength ? ` · ${formatBytes(metadata.contentLength)}` : "";
+        results.set(data.slug, { label: `Ada di S3${size}`, detail: `Objek EPUB tersedia di S3: ${data.storage.epub}` });
+      } catch {
+        results.set(data.slug, { label: "Belum diperiksa", detail: "S3 tidak dapat diakses saat halaman dimuat." });
+      }
+    }));
+  } catch {
+    candidates.forEach(({ data }) => results.set(data.slug, { label: "Belum diperiksa", detail: "Konfigurasi S3 lokal belum lengkap." }));
+  }
+
+  return results;
+}
+
+function formatBytes(bytes: number): string {
+  return bytes < 1024 * 1024 ? `${Math.ceil(bytes / 1024)} KB` : `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+const storageStates = await inspectEpubStorage(books);
+---
+
+<BaseLayout title="Kelola EPUB — Perpustakaan Islam Digital" description="Kelola metadata, status publikasi, dan daftar EPUB dari server lokal.">
+  <section class="admin-library">
+    <header class="admin-library__head">
+      <div>
+        <p class="admin-library__kicker">Admin lokal</p>
+        <h1>Kelola daftar EPUB</h1>
+        <p>Edit metadata, periksa kesiapan berkas, dan atur buku yang tampil di katalog.</p>
+      </div>
+      <a class="admin-button admin-button--primary" href="/admin/import/">Tambah EPUB</a>
+    </header>
+
+    <dl class="admin-summary" aria-label="Ringkasan koleksi">
+      <div><dt>Semua</dt><dd>{books.length}</dd></div>
+      <div><dt>Data nyata</dt><dd>{realCount}</dd></div>
+      <div><dt>Perlu ditinjau</dt><dd>{reviewCount}</dd></div>
+      <div><dt>Diarsipkan</dt><dd>{archivedCount}</dd></div>
+    </dl>
+
+    <div class="admin-toolbar">
+      <div class="field admin-toolbar__search">
+        <label for="book-filter">Cari buku</label>
+        <input id="book-filter" type="search" placeholder="Judul, penulis, atau slug" autocomplete="off" />
+      </div>
+      <div class="field admin-toolbar__status">
+        <label for="status-filter">Status katalog</label>
+        <select id="status-filter">
+          <option value="all">Semua status</option>
+          <option value="published">Terbit</option>
+          <option value="imported">Diimpor</option>
+          <option value="converted">Sudah dikonversi</option>
+          <option value="needs-review">Perlu ditinjau</option>
+          <option value="archived">Diarsipkan</option>
+        </select>
+      </div>
+      <div class="field admin-toolbar__type">
+        <label for="type-filter">Jenis data</label>
+        <select id="type-filter">
+          <option value="all">Semua data</option>
+          <option value="real">Data nyata</option>
+          <option value="mock">Data demonstrasi ({mockCount})</option>
+        </select>
+      </div>
+    </div>
+
+    <p class="admin-results" id="admin-results" aria-live="polite">Menampilkan {books.length} buku.</p>
+
+    <div class="admin-book-list" id="admin-book-list">
+      {books.map((book) => {
+        const category = book.data.categories[0]!;
+        const searchable = [book.data.title, ...book.data.authors, book.data.slug, ...book.data.tags].join(" ").toLowerCase();
+        const storageState = storageStates.get(book.data.slug) ?? { label: "Belum diperiksa", detail: "Storage tidak dapat diperiksa" };
+        return (
+          <article
+            class="admin-book"
+            data-book
+            data-search={searchable}
+            data-statuses={`${book.data.publication.status} ${book.data.verification.status}`}
+            data-type={book.data.mock ? "mock" : "real"}
+          >
+            <div class="admin-book__cover">
+              <BookCover title={book.data.title} category={getCategoryLabel(category)} cover={book.data.storage.cover} mock={book.data.mock} preview={book.data.preview} />
+            </div>
+            <div class="admin-book__identity">
+              <div class="admin-book__title-line">
+                <h2>{book.data.title}</h2>
+                <span class:list={["admin-status", `admin-status--${book.data.publication.status}`]}>{statusLabels[book.data.publication.status] ?? book.data.publication.status}</span>
+                {book.data.mock && <span class="admin-status admin-status--mock">Data demo</span>}
+              </div>
+              <p>{book.data.authors.join(", ")}</p>
+              <p class="admin-book__slug">/{book.data.slug}</p>
+            </div>
+            <dl class="admin-book__facts">
+              <div><dt>EPUB</dt><dd title={storageState.detail}>{storageState.label}</dd></div>
+              <div><dt>Editorial</dt><dd>{statusLabels[book.data.verification.status] ?? book.data.verification.status}</dd></div>
+            </dl>
+            <div class="admin-book__actions">
+              <a class="admin-button admin-button--primary" href={`/admin/books/${book.data.slug}/`}>Edit</a>
+              <a class="admin-button" href={`/books/${book.data.slug}/`}>Lihat</a>
+              {book.data.publication.status !== "archived" && (
+                <button class="admin-button admin-button--danger" type="button" data-archive={book.data.slug} data-title={book.data.title}>Arsipkan</button>
+              )}
+              <button class="admin-button admin-button--danger" type="button" data-delete={book.data.slug} data-title={book.data.title}>Hapus</button>
+            </div>
+          </article>
+        );
+      })}
+    </div>
+
+    <nav class="admin-pagination" id="admin-pagination" aria-label="Halaman daftar buku">
+      <p id="admin-pagination-summary" aria-live="polite"></p>
+      <div class="admin-pagination__controls">
+        <button class="admin-button" id="admin-page-previous" type="button" aria-label="Halaman sebelumnya">← <span>Sebelumnya</span></button>
+        <div class="admin-pagination__pages" id="admin-page-buttons" aria-label="Pilih halaman"></div>
+        <button class="admin-button" id="admin-page-next" type="button" aria-label="Halaman berikutnya"><span>Berikutnya</span> →</button>
+      </div>
+      <label class="admin-pagination__size" for="admin-page-size">Tampilkan
+        <select id="admin-page-size">
+          <option value="5">5</option>
+          <option value="8" selected>8</option>
+          <option value="12">12</option>
+          <option value="24">24</option>
+        </select>
+        per halaman
+      </label>
+    </nav>
+
+    <div class="admin-empty" id="admin-empty" hidden>
+      <h2>Tidak ada buku yang cocok.</h2>
+      <p>Ubah kata pencarian atau pilih status lain.</p>
+    </div>
+  </section>
+
+  <dialog class="admin-confirm" id="archive-dialog" aria-labelledby="archive-title">
+    <form method="dialog" class="admin-confirm__panel">
+      <p class="admin-library__kicker">Konfirmasi</p>
+      <h2 id="archive-title">Arsipkan buku?</h2>
+      <p id="archive-message">Buku akan disembunyikan dari katalog publik. Berkas di storage tidak dihapus.</p>
+      <p class="admin-confirm__state" id="archive-state" aria-live="polite"></p>
+      <div class="admin-confirm__actions">
+        <button class="admin-button" value="cancel">Batal</button>
+        <button class="admin-button admin-button--danger" id="archive-confirm" value="confirm">Arsipkan</button>
+      </div>
+    </form>
+  </dialog>
+  <dialog class="admin-confirm" id="delete-dialog" aria-labelledby="delete-title">
+    <form method="dialog" class="admin-confirm__panel">
+      <p class="admin-library__kicker">Tindakan permanen</p>
+      <h2 id="delete-title">Hapus entri katalog?</h2>
+      <p id="delete-message">Metadata akan dihapus dari katalog. EPUB dan sampul di S3 tetap tersimpan.</p>
+      <p class="admin-confirm__state" id="delete-state" aria-live="polite"></p>
+      <div class="admin-confirm__actions">
+        <button class="admin-button" value="cancel">Batal</button>
+        <button class="admin-button admin-button--danger" id="delete-confirm" value="confirm">Hapus katalog</button>
+      </div>
+    </form>
+  </dialog>
+</BaseLayout>
+
+<script>
+  const search = document.querySelector<HTMLInputElement>("#book-filter")!;
+  const status = document.querySelector<HTMLSelectElement>("#status-filter")!;
+  const type = document.querySelector<HTMLSelectElement>("#type-filter")!;
+  const cards = [...document.querySelectorAll<HTMLElement>("[data-book]")];
+  const results = document.querySelector<HTMLElement>("#admin-results")!;
+  const empty = document.querySelector<HTMLElement>("#admin-empty")!;
+  const pagination = document.querySelector<HTMLElement>("#admin-pagination")!;
+  const paginationSummary = document.querySelector<HTMLElement>("#admin-pagination-summary")!;
+  const pageButtons = document.querySelector<HTMLElement>("#admin-page-buttons")!;
+  const previousPage = document.querySelector<HTMLButtonElement>("#admin-page-previous")!;
+  const nextPage = document.querySelector<HTMLButtonElement>("#admin-page-next")!;
+  const pageSize = document.querySelector<HTMLSelectElement>("#admin-page-size")!;
+  const dialog = document.querySelector<HTMLDialogElement>("#archive-dialog")!;
+  const message = document.querySelector<HTMLElement>("#archive-message")!;
+  const archiveState = document.querySelector<HTMLElement>("#archive-state")!;
+  const confirm = document.querySelector<HTMLButtonElement>("#archive-confirm")!;
+  const deleteDialog = document.querySelector<HTMLDialogElement>("#delete-dialog")!;
+  const deleteMessage = document.querySelector<HTMLElement>("#delete-message")!;
+  const deleteState = document.querySelector<HTMLElement>("#delete-state")!;
+  const deleteConfirm = document.querySelector<HTMLButtonElement>("#delete-confirm")!;
+  let selectedSlug = "";
+  let deletedSlug = "";
+  let currentPage = 1;
+
+  const getFilteredCards = () => {
+    const query = search.value.trim().toLowerCase();
+    return cards.filter((card) => {
+      const matchesText = (card.dataset.search || "").includes(query);
+      const matchesStatus = status.value === "all" || (card.dataset.statuses || "").split(" ").includes(status.value);
+      const matchesType = type.value === "all" || card.dataset.type === type.value;
+      return matchesText && matchesStatus && matchesType;
+    });
+  };
+
+  const renderPageButtons = (pageCount: number) => {
+    pageButtons.replaceChildren();
+    for (let page = 1; page <= pageCount; page += 1) {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "admin-pagination__page";
+      button.textContent = String(page);
+      button.setAttribute("aria-label", `Halaman ${page}`);
+      if (page === currentPage) button.setAttribute("aria-current", "page");
+      button.addEventListener("click", () => {
+        currentPage = page;
+        applyFilters();
+      });
+      pageButtons.append(button);
+    }
+  };
+
+  const applyFilters = () => {
+    const filteredCards = getFilteredCards();
+    const itemsPerPage = Number(pageSize.value);
+    const pageCount = Math.max(1, Math.ceil(filteredCards.length / itemsPerPage));
+    if (currentPage > pageCount) currentPage = pageCount;
+    const firstItem = (currentPage - 1) * itemsPerPage;
+    const visibleCards = new Set(filteredCards.slice(firstItem, firstItem + itemsPerPage));
+
+    cards.forEach((card) => {
+      card.hidden = !visibleCards.has(card);
+    });
+    const lastItem = Math.min(firstItem + itemsPerPage, filteredCards.length);
+    results.textContent = filteredCards.length === 0
+      ? "Menampilkan 0 buku."
+      : `Menampilkan ${firstItem + 1}–${lastItem} dari ${filteredCards.length} buku.`;
+    empty.hidden = filteredCards.length !== 0;
+    pagination.hidden = filteredCards.length === 0;
+    paginationSummary.textContent = filteredCards.length > 0 ? `Halaman ${currentPage} dari ${pageCount}` : "";
+    previousPage.disabled = currentPage === 1;
+    nextPage.disabled = currentPage === pageCount;
+    renderPageButtons(pageCount);
+  };
+
+  const resetPageAndApplyFilters = () => {
+    currentPage = 1;
+    applyFilters();
+  };
+
+  search.addEventListener("input", resetPageAndApplyFilters);
+  status.addEventListener("change", resetPageAndApplyFilters);
+  type.addEventListener("change", resetPageAndApplyFilters);
+  pageSize.addEventListener("change", resetPageAndApplyFilters);
+  previousPage.addEventListener("click", () => {
+    if (currentPage > 1) currentPage -= 1;
+    applyFilters();
+  });
+  nextPage.addEventListener("click", () => {
+    currentPage += 1;
+    applyFilters();
+  });
+  applyFilters();
+
+  document.querySelectorAll<HTMLButtonElement>("[data-archive]").forEach((button) => {
+    button.addEventListener("click", () => {
+      selectedSlug = button.dataset.archive || "";
+      message.textContent = `“${button.dataset.title}” akan disembunyikan dari katalog publik. Berkas EPUB di storage tetap disimpan.`;
+      archiveState.textContent = "";
+      dialog.showModal();
+    });
+  });
+
+  document.querySelectorAll<HTMLButtonElement>("[data-delete]").forEach((button) => {
+    button.addEventListener("click", () => {
+      deletedSlug = button.dataset.delete || "";
+      deleteMessage.textContent = `“${button.dataset.title}” akan dihapus dari katalog. EPUB dan sampul di S3 tetap tersimpan.`;
+      deleteState.textContent = "";
+      deleteDialog.showModal();
+    });
+  });
+
+  confirm.addEventListener("click", async (event) => {
+    event.preventDefault();
+    if (!selectedSlug) return;
+    confirm.disabled = true;
+    confirm.textContent = "Mengarsipkan…";
+    archiveState.textContent = "Menyimpan perubahan katalog…";
+    try {
+      const response = await fetch(`/api/admin/books/${selectedSlug}`, { method: "DELETE" });
+      const payload = (await response.json()) as { error?: string; message?: string };
+      if (!response.ok) throw new Error(payload.error || "Buku tidak dapat diarsipkan.");
+      archiveState.textContent = payload.message || "Buku berhasil diarsipkan.";
+      window.setTimeout(() => window.location.reload(), 450);
+    } catch (error) {
+      archiveState.textContent = error instanceof Error ? error.message : "Buku tidak dapat diarsipkan.";
+      confirm.disabled = false;
+      confirm.textContent = "Arsipkan";
+    }
+  });
+
+  deleteConfirm.addEventListener("click", async (event) => {
+    event.preventDefault();
+    if (!deletedSlug) return;
+    deleteConfirm.disabled = true;
+    deleteConfirm.textContent = "Menghapus…";
+    deleteState.textContent = "Menghapus entri katalog…";
+    try {
+      const response = await fetch(`/api/admin/books/${deletedSlug}?mode=catalog`, { method: "DELETE" });
+      const payload = (await response.json()) as { error?: string; message?: string };
+      if (!response.ok) throw new Error(payload.error || "Katalog tidak dapat dihapus.");
+      deleteState.textContent = payload.message || "Entri katalog dihapus.";
+      window.setTimeout(() => window.location.reload(), 450);
+    } catch (error) {
+      deleteState.textContent = error instanceof Error ? error.message : "Katalog tidak dapat dihapus.";
+      deleteConfirm.disabled = false;
+      deleteConfirm.textContent = "Hapus katalog";
+    }
+  });
+</script>

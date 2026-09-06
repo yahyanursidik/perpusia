@@ -1,0 +1,108 @@
+---
+import BookCard from "../components/BookCard.astro";
+import BaseLayout from "../layouts/BaseLayout.astro";
+import { getUsedCategories, getVisibleBooks } from "../lib/books/queries";
+import { getCategoryLabel } from "../lib/books/categories";
+import { getPublicAssetUrl } from "../lib/storage/public-url";
+
+const books = await getVisibleBooks();
+const categories = getUsedCategories(books);
+const heroBook = books.find(({ data }) => Boolean(data.storage.cover)) ?? books[0];
+const heroCoverUrl = getPublicAssetUrl(heroBook?.data.storage.cover);
+const principles = [
+  {
+    title: "Nyaman untuk membaca",
+    description: "Pengalaman mobile dan kualitas reader menjadi pusat setiap keputusan produk.",
+  },
+  {
+    title: "Sumber yang dapat dilacak",
+    description: "PDF asli, atribusi, versi konversi, dan status verifikasi selalu dipertahankan.",
+  },
+  {
+    title: "Pribadi tanpa akun",
+    description: "Progress dan preferensi membaca nantinya tetap tersimpan di perangkat pengguna.",
+  },
+];
+---
+
+<BaseLayout
+  title="Perpustakaan Islam Digital"
+  description="Fondasi perpustakaan digital Islam untuk membaca ebook secara nyaman, ringan, dan tanpa login."
+>
+  <article class="home-shell">
+    <section class="home-hero" aria-labelledby="hero-title">
+      <div class="home-hero__copy">
+        <p class="home-hero__eyebrow">Akses ilmu, manfaat tanpa henti</p>
+        <h1 id="hero-title">Perpustakaan Digital Islam</h1>
+        <p class="hero__summary">
+          Temukan, baca, dan lanjutkan bacaan dari koleksi yang sedang dibangun dengan metadata yang dapat ditinjau.
+        </p>
+        <form class="home-hero__search" action="/library/" method="get">
+          <label for="hero-search" class="sr-only">Cari buku di perpustakaan</label>
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></svg>
+          <input id="hero-search" name="q" type="search" placeholder="Cari judul buku, penulis, atau topik..." />
+          <button type="submit">Cari</button>
+        </form>
+        <ul class="home-hero__promises" aria-label="Keunggulan perpustakaan">
+          <li><span aria-hidden="true">⌂</span><strong>Katalog terbuka</strong><small>Jelajahi koleksi yang tersedia</small></li>
+          <li><span aria-hidden="true">✓</span><strong>Metadata ditinjau</strong><small>Status buku terlihat jelas</small></li>
+          <li><span aria-hidden="true">▤</span><strong>Siap dibaca</strong><small>Lanjutkan dari perangkat Anda</small></li>
+        </ul>
+      </div>
+      <figure class="home-hero__visual" aria-label="Ilustrasi koleksi buku Islam">
+        <div class="home-hero__quote">
+          <p>“Ilmu adalah warisan para nabi; kemuliaannya tidak akan pudar.”</p>
+          <span>— Pengingat untuk pembaca</span>
+        </div>
+        <div class="home-hero__shelf" aria-hidden="true">
+          <span class="home-hero__shelf-book home-hero__shelf-book--one"></span>
+          <span class="home-hero__shelf-book home-hero__shelf-book--two"></span>
+          {heroCoverUrl && <img src={heroCoverUrl} alt="" loading="eager" />}
+        </div>
+        <figcaption>
+          {heroBook ? <a href={`/books/${heroBook.data.slug}/`}>Baca {heroBook.data.title} <span aria-hidden="true">→</span></a> : <a href="/library/">Lihat koleksi <span aria-hidden="true">→</span></a>}
+          <span class="home-hero__dots" aria-hidden="true"><i></i><i></i><i></i></span>
+        </figcaption>
+      </figure>
+    </section>
+    <section class="home-topics" aria-labelledby="topics-title">
+      <div class="section-heading"><h2 id="topics-title">Jelajahi berdasarkan topik</h2><a href="/category/">Lihat semua <span aria-hidden="true">→</span></a></div>
+      <div class="topic-strip">{categories.map((category) => <a href={`/category/${category}/`}><strong>{getCategoryLabel(category)}</strong><span>{books.filter((book) => book.data.categories.includes(category)).length} buku</span></a>)}</div>
+    </section>
+    <section class="home-books" aria-labelledby="books-title">
+      <div class="section-heading"><div><h2 id="books-title">Koleksi pilihan</h2><p>Buku yang tersedia pada katalog saat ini.</p></div><a href="/library/">Lihat koleksi <span aria-hidden="true">→</span></a></div>
+      <div class="book-grid book-grid--home">{books.slice(0, 6).map((book) => <BookCard book={book} />)}</div>
+    </section>
+
+    <section id="prinsip" class="foundation" aria-labelledby="foundation-title">
+      <div class="foundation__intro">
+      <h2 id="foundation-title">Dibangun untuk membaca dengan tenang.</h2>
+      <p>Struktur katalog, berkas EPUB, dan sumber bibliografis dirancang agar tetap bisa ditinjau dengan jelas.</p>
+      </div>
+      <ol class="principles">
+      {principles.map((principle, index) => (
+        <li>
+          <span aria-hidden="true">{String(index + 1).padStart(2, "0")}</span>
+          <div>
+            <h3>{principle.title}</h3>
+            <p>{principle.description}</p>
+          </div>
+        </li>
+      ))}
+      </ol>
+    </section>
+
+    <aside id="status" class="phase-note" aria-labelledby="status-title">
+      <div class="phase-note__inner">
+      <div>
+        <h2 id="status-title">Katalog awal sudah tersedia.</h2>
+        <p>
+          Tiga buku demonstrasi memvalidasi struktur metadata, kategori, dan halaman detail. Konten ini belum merupakan koleksi yang dapat dibaca.
+        </p>
+        <a class="text-link" href="/library/">Buka perpustakaan</a>
+      </div>
+      <p class="phase-note__status">Phase 0 · Step 2</p>
+      </div>
+    </aside>
+  </article>
+</BaseLayout>

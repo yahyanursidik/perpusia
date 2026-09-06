@@ -1,0 +1,336 @@
+---
+import { getCollection } from "astro:content";
+
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+import { BOOK_CATEGORIES, getCategoryLabel } from "../../../lib/books/categories";
+import "../../../styles/admin-library.css";
+import { getAdminBooks } from "../../../lib/books/content-file";
+import { listDraftBooks } from "../../../lib/books/drafts";
+
+export const prerender = false;
+
+const slug = Astro.params.slug ?? "";
+const book = (await getAdminBooks(await getCollection("books"), await listDraftBooks())).find(({ data }) => data.slug === slug);
+if (!book) return Astro.redirect("/admin/books/");
+
+const statuses = [
+  ["discovered", "Ditemukan"],
+  ["imported", "Diimpor"],
+  ["extracting", "Diproses"],
+  ["converted", "Sudah dikonversi"],
+  ["needs-review", "Perlu ditinjau"],
+  ["verified", "Terverifikasi"],
+  ["published", "Terbit"],
+  ["archived", "Diarsipkan"],
+] as const;
+---
+
+<BaseLayout title={`Edit ${book.data.title} — Admin`} description={`Edit metadata dan status publikasi ${book.data.title}.`}>
+  <section class="admin-editor">
+    <nav class="admin-breadcrumb" aria-label="Breadcrumb">
+      <a href="/admin/books/">Kelola EPUB</a><span aria-hidden="true">/</span><span>Edit buku</span>
+    </nav>
+
+    <header class="admin-editor__head">
+      <div>
+        <p class="admin-library__kicker">Metadata katalog</p>
+        <h1>Edit {book.data.title}</h1>
+        <p>Slug dan lokasi EPUB dikunci agar tautan baca yang sudah dibagikan tidak berubah.</p>
+      </div>
+      <a class="admin-button" href={`/books/${book.data.slug}/`}>Lihat halaman buku</a>
+    </header>
+
+    <div class="admin-editor__layout">
+      <form class="admin-edit-form" id="book-edit-form" data-slug={book.data.slug} novalidate>
+        <fieldset>
+          <legend>Identitas buku</legend>
+          <div class="admin-form-grid">
+            <div class="field field--wide">
+              <label for="title">Judul</label>
+              <input id="title" name="title" value={book.data.title} required maxlength="160" />
+            </div>
+            <div class="field field--wide">
+              <label for="authors">Penulis</label>
+              <input id="authors" name="authors" value={book.data.authors.join(", ")} required />
+              <p class="field__help">Pisahkan beberapa penulis dengan koma.</p>
+            </div>
+            <div class="field">
+              <label for="category">Kategori utama</label>
+              <select id="category" name="category" required>
+                {BOOK_CATEGORIES.map((category) => <option value={category} selected={book.data.categories.includes(category)}>{getCategoryLabel(category)}</option>)}
+              </select>
+            </div>
+            <div class="field">
+              <label for="language">Bahasa</label>
+              <input id="language" name="language" value={book.data.language.join(", ")} required />
+            </div>
+            <div class="field field--wide">
+              <label for="tags">Tag</label>
+              <input id="tags" name="tags" value={book.data.tags.join(", ")} />
+              <p class="field__help">Pisahkan tag dengan koma.</p>
+            </div>
+            <div class="field field--wide">
+              <label for="description">Keterangan</label>
+              <textarea id="description" name="description" required maxlength="3000">{book.data.description}</textarea>
+            </div>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>Penerbitan dan verifikasi</legend>
+          <div class="admin-form-grid">
+            <div class="field">
+              <label for="publisher">Penerbit atau sumber</label>
+              <input id="publisher" name="publisher" value={book.data.source.publisher} required />
+            </div>
+            <div class="field">
+              <label for="source-page-url">URL sumber</label>
+              <input id="source-page-url" name="sourcePageUrl" type="url" value={book.data.source.pageUrl ?? ""} placeholder="https://…" />
+            </div>
+            <div class="field field--wide">
+              <label for="original-pdf-url">Tautan PDF asli</label>
+              <input id="original-pdf-url" name="originalPdfUrl" type="url" value={book.data.source.originalPdfUrl ?? ""} placeholder="https://…/buku-asli.pdf" />
+              <p class="field__help">Tautan sumber PDF untuk rujukan editorial; tidak mengunggah atau menerbitkan PDF tersebut.</p>
+            </div>
+            <div class="field">
+              <label for="edition-label">Edisi</label>
+              <input id="edition-label" name="editionLabel" value={book.data.edition.label} />
+            </div>
+            <div class="field">
+              <label for="edition-year">Tahun</label>
+              <input id="edition-year" name="editionYear" value={book.data.edition.year} inputmode="numeric" />
+            </div>
+            <div class="field">
+              <label for="verification-status">Status editorial</label>
+              <select id="verification-status" name="verificationStatus">
+                {statuses.map(([value, label]) => <option value={value} selected={book.data.verification.status === value}>{label}</option>)}
+              </select>
+            </div>
+            <div class="field">
+              <label for="publication-status">Status katalog</label>
+              <select id="publication-status" name="publicationStatus">
+                {statuses.map(([value, label]) => <option value={value} selected={book.data.publication.status === value}>{label}</option>)}
+              </select>
+              <p class="field__help">Pilih <strong>Terbit</strong> lalu simpan agar buku muncul di beranda dan koleksi publik.</p>
+            </div>
+            <div class="field field--wide">
+              <label for="verification-notes">Catatan editor</label>
+              <textarea id="verification-notes" name="verificationNotes" maxlength="3000">{book.data.verification.notes}</textarea>
+            </div>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>Perbarui berkas katalog</legend>
+          <p class="field__help admin-asset-help">Kosongkan bila tidak ingin mengganti berkas. Mengganti EPUB akan mengubah status katalog menjadi Perlu ditinjau sampai diterbitkan kembali.</p>
+          <div class="admin-form-grid">
+            <div class="field">
+              <label for="cover-file">Sampul baru</label>
+              <input id="cover-file" name="cover" type="file" accept="image/jpeg,image/png,image/webp" />
+              <p class="field__help">JPG, PNG, atau WebP · maksimal 100 MB.</p>
+            </div>
+            <div class="field">
+              <label for="epub-file">EPUB baru</label>
+              <input id="epub-file" name="epub" type="file" accept=".epub,application/epub+zip" />
+              <p class="field__help">EPUB · maksimal 100 MB.</p>
+            </div>
+          </div>
+          <div class="admin-upload-progress" id="asset-upload-progress" hidden aria-live="polite">
+            <div class="admin-upload-progress__head">
+              <strong id="asset-upload-label">Menyiapkan unggahan</strong>
+              <span id="asset-upload-percent">0%</span>
+            </div>
+            <progress id="asset-upload-bar" value="0" max="100">0%</progress>
+            <p id="asset-upload-detail">Persentase akan muncul saat berkas dikirim ke server.</p>
+          </div>
+        </fieldset>
+
+        <div class="admin-form-actions">
+          <p id="edit-state" aria-live="polite">Belum ada perubahan yang disimpan.</p>
+          <div>
+            <a class="admin-button" href="/admin/books/">Batal</a>
+            <button class="admin-button admin-button--primary" type="submit">Simpan perubahan</button>
+          </div>
+        </div>
+      </form>
+
+      <aside class="admin-file-panel" aria-labelledby="file-panel-title">
+        <h2 id="file-panel-title">Berkas terhubung</h2>
+        <dl>
+          <div><dt>Slug</dt><dd>{book.data.slug}</dd></div>
+          <div><dt>EPUB</dt><dd>{book.data.storage.epub ?? "Belum ada"}</dd></div>
+          <div><dt>Sampul</dt><dd>{book.data.storage.cover ?? "Belum ada"}</dd></div>
+          <div><dt>Versi konversi</dt><dd>{book.data.conversion.version}</dd></div>
+        </dl>
+        <p>Penggantian EPUB dilakukan lewat alur impor agar versi dan berkas lama tetap terlacak.</p>
+        <div class="admin-danger-zone">
+          <h3>Hapus katalog</h3>
+          <p>Hanya entri katalog yang dihapus. EPUB dan sampul di S3 tetap tersimpan.</p>
+          <button class="admin-button admin-button--danger" id="delete-catalog-open" type="button">Hapus katalog</button>
+        </div>
+      </aside>
+    </div>
+
+    <dialog class="admin-confirm" id="delete-catalog-dialog" aria-labelledby="delete-catalog-title">
+      <form method="dialog" class="admin-confirm__panel">
+        <p class="admin-library__kicker">Tindakan permanen</p>
+        <h2 id="delete-catalog-title">Hapus entri katalog?</h2>
+        <p>
+          Metadata “{book.data.title}” akan dihapus dari katalog dan tidak bisa dipulihkan dari halaman admin.
+          EPUB di S3 tidak dihapus.
+        </p>
+        <p class="admin-confirm__state" id="delete-catalog-state" aria-live="polite"></p>
+        <div class="admin-confirm__actions">
+          <button class="admin-button" value="cancel">Batal</button>
+          <button class="admin-button admin-button--danger" id="delete-catalog-confirm" value="confirm">Hapus katalog</button>
+        </div>
+      </form>
+    </dialog>
+  </section>
+</BaseLayout>
+
+<script>
+  const form = document.querySelector<HTMLFormElement>("#book-edit-form")!;
+  const state = document.querySelector<HTMLElement>("#edit-state")!;
+  const submit = form.querySelector<HTMLButtonElement>('button[type="submit"]')!;
+  const deleteDialog = document.querySelector<HTMLDialogElement>("#delete-catalog-dialog")!;
+  const deleteOpen = document.querySelector<HTMLButtonElement>("#delete-catalog-open")!;
+  const deleteConfirm = document.querySelector<HTMLButtonElement>("#delete-catalog-confirm")!;
+  const deleteState = document.querySelector<HTMLElement>("#delete-catalog-state")!;
+  const assetUploadProgress = document.querySelector<HTMLElement>("#asset-upload-progress")!;
+  const assetUploadLabel = document.querySelector<HTMLElement>("#asset-upload-label")!;
+  const assetUploadPercent = document.querySelector<HTMLElement>("#asset-upload-percent")!;
+  const assetUploadBar = document.querySelector<HTMLProgressElement>("#asset-upload-bar")!;
+  const assetUploadDetail = document.querySelector<HTMLElement>("#asset-upload-detail")!;
+  const list = (value: FormDataEntryValue | null) => typeof value === "string"
+    ? value.split(",").map((item) => item.trim()).filter(Boolean)
+    : [];
+  const formatBytes = (size: number) => size < 1024 * 1024
+    ? `${Math.ceil(size / 1024)} KB`
+    : `${(size / (1024 * 1024)).toFixed(1)} MB`;
+
+  const setAssetProgress = (percent: number, label: string, detail: string, stateName = "loading") => {
+    const safePercent = Math.max(0, Math.min(100, Math.round(percent)));
+    assetUploadProgress.hidden = false;
+    assetUploadProgress.dataset.state = stateName;
+    assetUploadLabel.textContent = label;
+    assetUploadPercent.textContent = `${safePercent}%`;
+    assetUploadBar.value = safePercent;
+    assetUploadDetail.textContent = detail;
+  };
+
+  const uploadAssets = (assets: FormData) => new Promise<{ error?: string; message?: string }>((resolve, reject) => {
+    const request = new XMLHttpRequest();
+    request.open("POST", `/api/admin/books/${form.dataset.slug}/assets`);
+    request.responseType = "json";
+    request.upload.addEventListener("progress", (event) => {
+      if (!event.lengthComputable) {
+        setAssetProgress(0, "Mengunggah berkas", "Mengirim berkas ke server…");
+        return;
+      }
+      setAssetProgress(
+        (event.loaded / event.total) * 100,
+        "Mengunggah berkas",
+        `Mengirim ${formatBytes(event.loaded)} dari ${formatBytes(event.total)}…`,
+      );
+    });
+    request.upload.addEventListener("load", () => {
+      setAssetProgress(100, "Menyimpan ke storage", "Berkas sudah diterima server. Menyimpan perubahan katalog…");
+    });
+    request.addEventListener("load", () => {
+      const payload = request.response || JSON.parse(request.responseText || "{}");
+      if (request.status >= 200 && request.status < 300) {
+        setAssetProgress(100, "Unggahan selesai", "Berkas sudah tersimpan di storage dan katalog diperbarui.", "success");
+        resolve(payload);
+        return;
+      }
+      reject(new Error(payload.error || "Berkas tidak dapat diperbarui."));
+    });
+    request.addEventListener("error", () => reject(new Error("Koneksi upload terputus. Coba lagi.")));
+    request.send(assets);
+  });
+
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    if (!form.reportValidity()) return;
+    const data = new FormData(form);
+    submit.disabled = true;
+    submit.textContent = "Menyimpan…";
+    state.textContent = "Memeriksa dan menyimpan metadata…";
+
+    try {
+      const response = await fetch(`/api/admin/books/${form.dataset.slug}`, {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          title: data.get("title"),
+          authors: list(data.get("authors")),
+          categories: [data.get("category")],
+          tags: list(data.get("tags")),
+          languages: list(data.get("language")),
+          description: data.get("description"),
+          publisher: data.get("publisher"),
+          sourcePageUrl: data.get("sourcePageUrl"),
+          originalPdfUrl: data.get("originalPdfUrl"),
+          editionLabel: data.get("editionLabel"),
+          editionYear: data.get("editionYear"),
+          verificationStatus: data.get("verificationStatus"),
+          publicationStatus: data.get("publicationStatus"),
+          verificationNotes: data.get("verificationNotes"),
+        }),
+      });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload.error || "Perubahan tidak dapat disimpan.");
+      const cover = form.elements.namedItem("cover") as HTMLInputElement;
+      const epub = form.elements.namedItem("epub") as HTMLInputElement;
+      if (cover.files?.[0] || epub.files?.[0]) {
+        const files = [cover.files?.[0], epub.files?.[0]].filter((file): file is File => Boolean(file));
+        const totalSize = files.reduce((total, file) => total + file.size, 0);
+        state.textContent = "Metadata tersimpan. Mengunggah berkas katalog…";
+        setAssetProgress(0, "Menyiapkan unggahan", `${files.length} berkas · ${formatBytes(totalSize)}`);
+        const assets = new FormData();
+        if (cover.files?.[0]) assets.set("cover", cover.files[0]);
+        if (epub.files?.[0]) assets.set("epub", epub.files[0]);
+        const assetPayload = await uploadAssets(assets);
+        cover.value = "";
+        epub.value = "";
+        state.textContent = assetPayload.message || "Berkas katalog tersimpan.";
+      } else {
+        state.textContent = payload.message || "Perubahan tersimpan.";
+      }
+      state.dataset.state = "success";
+    } catch (error) {
+      state.textContent = error instanceof Error ? error.message : "Perubahan tidak dapat disimpan.";
+      state.dataset.state = "error";
+      if (!assetUploadProgress.hidden) {
+        setAssetProgress(assetUploadBar.value, "Upload belum selesai", "Berkas belum dapat disimpan. Periksa pesan kesalahan lalu coba lagi.", "error");
+      }
+    } finally {
+      submit.disabled = false;
+      submit.textContent = "Simpan perubahan";
+    }
+  });
+
+  deleteOpen.addEventListener("click", () => {
+    deleteState.textContent = "";
+    deleteDialog.showModal();
+  });
+
+  deleteConfirm.addEventListener("click", async (event) => {
+    event.preventDefault();
+    deleteConfirm.disabled = true;
+    deleteConfirm.textContent = "Menghapus…";
+    deleteState.textContent = "Menghapus entri katalog…";
+    try {
+      const response = await fetch(`/api/admin/books/${form.dataset.slug}?mode=catalog`, { method: "DELETE" });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload.error || "Katalog tidak dapat dihapus.");
+      deleteState.textContent = payload.message || "Entri katalog dihapus.";
+      window.setTimeout(() => window.location.assign("/admin/books/"), 450);
+    } catch (error) {
+      deleteState.textContent = error instanceof Error ? error.message : "Katalog tidak dapat dihapus.";
+      deleteConfirm.disabled = false;
+      deleteConfirm.textContent = "Hapus katalog";
+    }
+  });
+</script>

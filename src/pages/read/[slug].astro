@@ -1,0 +1,143 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import BookCover from "../../components/BookCover.astro";
+import { getVisibleBooks } from "../../lib/books/queries";
+import { getCategoryLabel } from "../../lib/books/categories";
+import "../../styles/reader.css";
+
+export const prerender = false;
+
+const slug = Astro.params.slug ?? "";
+const book = (await getVisibleBooks()).find(({ data }) => data.slug === slug && Boolean(data.storage.epub));
+if (!book) return Astro.redirect("/library/");
+const epubKey = book.data.storage.epub;
+if (!epubKey) throw new Error("EPUB tidak tersedia untuk buku ini.");
+const epubUrl = `/api/books/${book.data.slug}/book.epub`;
+const categoryLabel = getCategoryLabel(book.data.categories[0]!);
+---
+
+<BaseLayout title={`Baca ${book.data.title} — Perpustakaan Islam Digital`} description={`Pembaca EPUB untuk ${book.data.title}.`}>
+  <article class="reader-shell">
+    <aside class="reader-sidebar">
+      <a class="reader-shell__back" href={`/books/${book.data.slug}/`}>← Detail buku</a>
+      <BookCover title={book.data.title} category={categoryLabel} mock={book.data.mock} preview={book.data.preview} cover={book.data.storage.cover} />
+      <h2>{book.data.title}</h2>
+      <p>{book.data.authors.join(", ")}</p>
+      <nav class="reader-sidebar__nav" aria-label="Kontrol pembaca"><a href="#epub-reader">Bacaan</a><a href={`/books/${book.data.slug}/`}>Informasi buku</a></nav>
+    </aside>
+    <div class="reader-main">
+      <header class="reader-shell__head">
+        <div>
+          <a class="reader-shell__back" href={`/books/${book.data.slug}/`}>← Kembali ke detail buku</a>
+          <p class="reader-shell__label">Pembaca EPUB</p>
+          <h1>{book.data.title}</h1>
+          <p>{book.data.authors.join(", ")}</p>
+        </div>
+        <div class="reader-type-controls" aria-label="Ukuran teks pembaca">
+          <span>Teks</span>
+          <button id="reader-font-smaller" type="button" aria-label="Perkecil teks" disabled>A−</button>
+          <output id="reader-font-value" for="reader-font-smaller reader-font-larger">100%</output>
+          <button id="reader-font-larger" type="button" aria-label="Perbesar teks" disabled>A+</button>
+        </div>
+      </header>
+      <section class="epub-reader" aria-label={`Pembaca EPUB ${book.data.title}`}>
+        <div class="reader-progress" aria-hidden="true"><span id="reader-progress-bar"></span></div>
+        <div id="epub-reader" data-epub-url={epubUrl}></div>
+        <div class="reader-loading" id="reader-loading" role="status" aria-live="polite">
+          <span class="reader-loading__mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <div>
+            <strong id="reader-loading-title">Mohon ditunggu</strong>
+            <p id="reader-loading-message">EPUB sedang kami buka…</p>
+          </div>
+        </div>
+        <p id="reader-status" aria-live="polite">Memuat EPUB…</p>
+      </section>
+      <nav class="reader-controls" aria-label="Navigasi halaman buku">
+        <button id="reader-prev" type="button" disabled>← Sebelumnya</button>
+        <p id="reader-position" aria-live="polite">Menyiapkan halaman…</p>
+        <button id="reader-next" type="button" disabled>Berikutnya →</button>
+      </nav>
+      <p class="reader-hint">Gunakan tombol navigasi atau tombol panah kiri/kanan pada keyboard.</p>
+    </div>
+  </article>
+</BaseLayout>
+
+<script>
+  const reader = document.querySelector<HTMLDivElement>("#epub-reader")!;
+  const status = document.querySelector<HTMLElement>("#reader-status")!;
+  const previous = document.querySelector<HTMLButtonElement>("#reader-prev")!;
+  const next = document.querySelector<HTMLButtonElement>("#reader-next")!;
+  const smaller = document.querySelector<HTMLButtonElement>("#reader-font-smaller")!;
+  const larger = document.querySelector<HTMLButtonElement>("#reader-font-larger")!;
+  const fontValue = document.querySelector<HTMLOutputElement>("#reader-font-value")!;
+  const position = document.querySelector<HTMLElement>("#reader-position")!;
+  const progress = document.querySelector<HTMLElement>("#reader-progress-bar")!;
+  const loading = document.querySelector<HTMLElement>("#reader-loading")!;
+  const loadingTitle = document.querySelector<HTMLElement>("#reader-loading-title")!;
+  const loadingMessage = document.querySelector<HTMLElement>("#reader-loading-message")!;
+  const epubUrl = reader.dataset.epubUrl;
+  const fontStorageKey = "perpustakaan-reader-font-scale";
+
+  void (async () => {
+    if (!epubUrl) throw new Error("Alamat EPUB tidak ditemukan.");
+
+    try {
+    const { default: ePub } = await import("epubjs");
+    const book = ePub(epubUrl);
+    const rendition = book.renderTo(reader, { flow: "paginated", height: "100%", manager: "default", width: "100%" });
+    let fontScale = 100;
+    try { fontScale = Number(window.localStorage.getItem(fontStorageKey)) || 100; } catch { /* Preferensi lokal dapat dibatasi browser. */ }
+    fontScale = Math.min(140, Math.max(80, fontScale));
+    const setFontScale = (nextScale: number) => {
+      fontScale = Math.min(140, Math.max(80, nextScale));
+      rendition.themes.fontSize(`${fontScale}%`);
+      fontValue.value = `${fontScale}%`;
+      smaller.disabled = fontScale <= 80;
+      larger.disabled = fontScale >= 140;
+      try { window.localStorage.setItem(fontStorageKey, String(fontScale)); } catch { /* Preferensi lokal dapat dibatasi browser. */ }
+    };
+    rendition.on("relocated", (location) => {
+      const displayed = location.start?.displayed;
+      if (displayed?.page && displayed.total && displayed.total > 1) {
+        position.textContent = `Halaman ${displayed.page} dari ${displayed.total}`;
+        progress.style.width = `${Math.max(4, (displayed.page / displayed.total) * 100)}%`;
+      } else {
+        position.textContent = "Memulai bacaan";
+        progress.style.width = "4%";
+      }
+      previous.disabled = Boolean(location.atStart);
+      next.disabled = Boolean(location.atEnd);
+    });
+    setFontScale(fontScale);
+    await rendition.display();
+    loading.hidden = true;
+    status.textContent = "EPUB siap dibaca.";
+    status.dataset.state = "success";
+    previous.disabled = false;
+    next.disabled = false;
+    smaller.disabled = fontScale <= 80;
+    larger.disabled = fontScale >= 140;
+    previous.addEventListener("click", () => void rendition.prev());
+    next.addEventListener("click", () => void rendition.next());
+    smaller.addEventListener("click", () => setFontScale(fontScale - 10));
+    larger.addEventListener("click", () => setFontScale(fontScale + 10));
+    window.addEventListener("keydown", (event) => {
+      if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
+      const target = event.target as HTMLElement | null;
+      if (target?.matches("input, textarea, select, button, a")) return;
+      if (event.key === "ArrowLeft" && !previous.disabled) { event.preventDefault(); void rendition.prev(); }
+      if (event.key === "ArrowRight" && !next.disabled) { event.preventDefault(); void rendition.next(); }
+    });
+    window.addEventListener("beforeunload", () => {
+      rendition.destroy();
+      book.destroy();
+    }, { once: true });
+    } catch {
+      status.textContent = "EPUB tidak dapat dimuat dari storage. Coba muat ulang beberapa saat lagi.";
+      status.dataset.state = "error";
+      loading.dataset.state = "error";
+      loadingTitle.textContent = "EPUB belum dapat dibuka";
+      loadingMessage.textContent = "Coba muat ulang beberapa saat lagi.";
+    }
+  })();
+</script>

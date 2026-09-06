@@ -1,0 +1,145 @@
+---
+import "../styles/global.css";
+
+interface Props {
+  title: string;
+  description: string;
+}
+
+const { title, description } = Astro.props;
+const currentPath = Astro.url.pathname;
+
+function isCurrent(href: string): boolean {
+  return href === "/" ? currentPath === href : currentPath.startsWith(href);
+}
+---
+
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="description" content={description} />
+    <meta name="theme-color" content="#f5f0e5" />
+    <title>{title}</title>
+  </head>
+  <body>
+    <a class="skip-link" href="#main-content">Lewati ke konten utama</a>
+    <div class="app-frame">
+      <aside class="app-sidebar">
+        <a class="app-brand" href="/" aria-label="Perpustakaan Digital Islam, beranda">
+          <span class="app-brand__mark" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 5.5 12 2l8 3.5v12L12 22l-8-4.5v-12Z"/><path d="M4 5.5 12 10l8-4.5M12 10v12"/><path d="m8 12 4 2 4-2"/></svg>
+          </span>
+          <span>Perpustakaan<br />Digital Islam</span>
+        </a>
+        <nav class="app-nav" aria-label="Navigasi utama">
+          <a href="/" aria-current={isCurrent("/") ? "page" : undefined}><span aria-hidden="true">⌂</span>Beranda</a>
+          <a href="/library/" aria-current={isCurrent("/library/") ? "page" : undefined}><span aria-hidden="true">▤</span>Koleksi</a>
+          <a href="/category/" aria-current={isCurrent("/category/") ? "page" : undefined}><span aria-hidden="true">◫</span>Kategori</a>
+          <a href="/admin/books/" aria-current={isCurrent("/admin/books/") ? "page" : undefined}><span aria-hidden="true">☷</span>Kelola EPUB</a>
+          <a href="/admin/import/" aria-current={currentPath === "/admin/import/" ? "page" : undefined}><span aria-hidden="true">⇧</span>Tambah Buku</a>
+        </nav>
+        <div class="app-sidebar__note">
+          <strong>Ilmu untuk semua, manfaat tanpa henti.</strong>
+          <p>Akses koleksi dan lanjutkan bacaan dari mana saja.</p>
+          <a href="/library/">Jelajahi koleksi <span aria-hidden="true">→</span></a>
+        </div>
+      </aside>
+      <div class="app-workspace">
+        <header class="app-topbar">
+          <form class="app-search" action="/library/" method="get">
+            <label for="global-search" class="sr-only">Cari buku</label>
+            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></svg>
+            <input id="global-search" name="q" type="search" placeholder="Cari judul buku, penulis, atau topik..." />
+          </form>
+          <nav class="app-topbar__links" aria-label="Tautan cepat">
+            <a href="/library/">Koleksi</a>
+            <a href="/category/">Kategori</a>
+            <button class="accessibility-trigger" id="accessibility-open" type="button" aria-haspopup="dialog" aria-controls="accessibility-dialog">Aksesibilitas</button>
+            <span class="app-avatar" aria-label="Akun lokal">PI</span>
+          </nav>
+        </header>
+        <main id="main-content">
+          <slot />
+        </main>
+        <footer class="app-footer">
+          <p>Yayasan Pendidikan Ihsanul Adab</p>
+          <div class="app-footer__links">
+            <a href="https://yahyanursidik.my.id" target="_blank" rel="noopener noreferrer">Dikembangkan oleh Yahya Nursidik <span class="sr-only">(membuka situs eksternal)</span></a>
+            <a href="/admin/books/">Kelola koleksi</a>
+          </div>
+        </footer>
+        <nav class="app-mobile-nav" aria-label="Navigasi utama mobile">
+          <a href="/" aria-current={isCurrent("/") ? "page" : undefined}>
+            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1V10Z"/></svg><span>Beranda</span>
+          </a>
+          <a href="/library/" aria-current={isCurrent("/library/") ? "page" : undefined}>
+            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5.5 10 4v15L4 20.5v-15ZM20 5.5 14 4v15l6 1.5v-15ZM10 4l4 1.5V20l-4-1V4Z"/></svg><span>Koleksi</span>
+          </a>
+          <a href="/category/" aria-current={isCurrent("/category/") ? "page" : undefined}>
+            <svg aria-hidden="true" viewBox="0 0 24 24" fill="currentColor"><circle cx="6" cy="6" r="2.25"/><circle cx="18" cy="6" r="2.25"/><circle cx="6" cy="18" r="2.25"/><circle cx="18" cy="18" r="2.25"/></svg><span>Kategori</span>
+          </a>
+          <a href="/admin/books/" aria-current={isCurrent("/admin/") ? "page" : undefined}>
+            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 4h14v16H5zM8 8h8M8 12h8M8 16h5"/></svg><span>Kelola</span>
+          </a>
+        </nav>
+      </div>
+    </div>
+    <dialog class="accessibility-dialog" id="accessibility-dialog" aria-labelledby="accessibility-title">
+      <form method="dialog" class="accessibility-dialog__panel">
+        <div class="accessibility-dialog__head">
+          <div>
+            <p class="accessibility-dialog__eyebrow">Kenyamanan membaca</p>
+            <h2 id="accessibility-title">Aksesibilitas</h2>
+            <p>Pilih tampilan yang paling nyaman untuk Anda.</p>
+          </div>
+          <button class="accessibility-dialog__close" value="close" aria-label="Tutup pengaturan aksesibilitas">Tutup</button>
+        </div>
+        <fieldset class="accessibility-options">
+          <legend>Pilih mode tampilan</legend>
+          <label class="accessibility-option">
+            <input type="radio" name="accessibility-mode" value="normal" checked />
+            <span><strong>Normal</strong><small>Warna dan ukuran standar</small></span>
+          </label>
+          <label class="accessibility-option">
+            <input type="radio" name="accessibility-mode" value="contrast" />
+            <span><strong>Kontras tinggi</strong><small>Warna lebih tegas dan mudah dibedakan</small></span>
+          </label>
+          <label class="accessibility-option">
+            <input type="radio" name="accessibility-mode" value="senior" />
+            <span><strong>Mode lansia</strong><small>Teks dan area kontrol lebih besar</small></span>
+          </label>
+        </fieldset>
+        <p class="accessibility-dialog__notice" id="accessibility-notice" aria-live="polite">Mode Normal aktif. Pilihan disimpan di perangkat ini.</p>
+      </form>
+    </dialog>
+    <script>
+      const accessibilityDialog = document.querySelector<HTMLDialogElement>("#accessibility-dialog");
+      const accessibilityOpen = document.querySelector<HTMLButtonElement>("#accessibility-open");
+      const accessibilityModes = document.querySelectorAll<HTMLInputElement>('input[name="accessibility-mode"]');
+      const accessibilityNotice = document.querySelector<HTMLElement>("#accessibility-notice");
+      const accessibilityStorageKey = "perpustakaan-accessibility-mode";
+      const accessibilityLabels: Record<string, string> = { normal: "Normal", contrast: "Kontras tinggi", senior: "Mode lansia" };
+
+      const setAccessibilityMode = (mode: string) => {
+        document.documentElement.dataset.accessibilityMode = mode;
+        accessibilityModes.forEach((input) => { input.checked = input.value === mode; });
+        if (accessibilityNotice) accessibilityNotice.textContent = `Mode ${accessibilityLabels[mode] || "Normal"} aktif. Pilihan disimpan di perangkat ini.`;
+      };
+
+      try {
+        setAccessibilityMode(window.localStorage.getItem(accessibilityStorageKey) || "normal");
+      } catch {
+        setAccessibilityMode("normal");
+      }
+
+      accessibilityOpen?.addEventListener("click", () => accessibilityDialog?.showModal());
+      accessibilityModes.forEach((input) => input.addEventListener("change", () => {
+        if (!input.checked) return;
+        setAccessibilityMode(input.value);
+        try { window.localStorage.setItem(accessibilityStorageKey, input.value); } catch { /* Penyimpanan lokal mungkin dibatasi browser. */ }
+      }));
+    </script>
+  </body>
+</html>

@@ -1,0 +1,343 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { BOOK_CATEGORIES, getCategoryLabel } from "../../lib/books/categories";
+import "../../styles/import-workbench.css";
+---
+
+<BaseLayout
+  title="Import draft — Perpustakaan Islam Digital"
+  description="Unggah EPUB dan metadata sebagai draft privat ke storage sebelum diproses secara editorial."
+>
+  <main class="import-workbench">
+    <header class="import-workbench__head">
+      <p class="import-workbench__kicker">Admin lokal · draft</p>
+      <h1>Siapkan satu buku dengan teliti.</h1>
+      <p>
+        Pilih EPUB, sampul, dan metadata. Berkas akan disimpan sebagai draft privat di storage; tidak ada yang diterbitkan otomatis.
+      </p>
+    </header>
+
+    <aside class="import-notice" aria-labelledby="import-notice-title">
+      <h2 id="import-notice-title">Unggah draft dari localhost</h2>
+      <p>
+        Form ini aktif hanya di server lokal dan menyimpan EPUB ke prefix draft Contabo. Pastikan hak distribusi, sumber asli, dan kualitas EPUB telah diperiksa sebelum menerbitkannya.
+      </p>
+    </aside>
+
+    <form id="import-form" class="import-form" novalidate>
+      <fieldset class="import-form__group">
+        <legend>01 · Berkas</legend>
+        <div class="import-form__grid">
+          <div class="field field--wide">
+            <label for="epub-file">Berkas EPUB <span aria-hidden="true">*</span></label>
+            <label class="file-control" for="epub-file">
+              <span>Pilih EPUB</span>
+              <input id="epub-file" name="epub" type="file" accept=".epub,application/epub+zip" required />
+            </label>
+            <p id="epub-help" class="field__help">Pilih satu berkas berekstensi .epub.</p>
+          </div>
+
+          <div class="field field--wide">
+            <label for="cover-file">Sampul</label>
+            <label class="file-control" for="cover-file">
+              <span>Pilih gambar</span>
+              <input id="cover-file" name="cover" type="file" accept="image/jpeg,image/png,image/webp" />
+            </label>
+            <p id="cover-help" class="field__help">Opsional: JPG, PNG, atau WebP.</p>
+          </div>
+        </div>
+      </fieldset>
+
+      <fieldset class="import-form__group">
+        <legend>02 · Metadata</legend>
+        <div class="import-form__grid">
+          <div class="field field--wide">
+            <label for="title">Judul <span aria-hidden="true">*</span></label>
+            <input id="title" name="title" type="text" autocomplete="off" required aria-describedby="title-help" />
+            <p id="title-help" class="field__help">Gunakan judul seperti yang tercantum pada halaman judul buku.</p>
+          </div>
+
+          <div class="field">
+            <label for="author">Penulis <span aria-hidden="true">*</span></label>
+            <input id="author" name="author" type="text" autocomplete="name" required />
+            <p class="field__help">Pisahkan beberapa penulis dengan koma.</p>
+          </div>
+
+          <div class="field">
+            <label for="category">Kategori <span aria-hidden="true">*</span></label>
+            <select id="category" name="category" required>
+              <option value="">Pilih kategori</option>
+              {BOOK_CATEGORIES.map((category) => <option value={category}>{getCategoryLabel(category)}</option>)}
+            </select>
+            <p class="field__help">Pilih satu kategori utama.</p>
+          </div>
+
+          <div class="field">
+            <label for="language">Bahasa <span aria-hidden="true">*</span></label>
+            <input id="language" name="language" type="text" value="Bahasa Indonesia" required />
+            <p class="field__help">Contoh: Bahasa Indonesia.</p>
+          </div>
+
+          <div class="field">
+            <label for="publisher">Penerbit atau sumber</label>
+            <input id="publisher" name="publisher" type="text" autocomplete="organization" />
+            <p class="field__help">Kosongkan bila belum terverifikasi.</p>
+          </div>
+
+          <div class="field field--wide">
+            <label for="source-url">URL sumber asli</label>
+            <input id="source-url" name="sourceUrl" type="url" inputmode="url" placeholder="https://contoh.id/buku" />
+            <p class="field__help">Jangan isi URL lokal atau URL yang belum Anda verifikasi.</p>
+          </div>
+
+          <div class="field field--wide">
+            <label for="description">Keterangan <span aria-hidden="true">*</span></label>
+            <textarea id="description" name="description" required></textarea>
+            <p class="field__help">Ringkas isi buku dan catat ketidakpastian penting untuk editor berikutnya.</p>
+          </div>
+        </div>
+      </fieldset>
+
+      <fieldset class="import-form__group">
+        <legend>03 · Tinjau</legend>
+        <label class="check-control" for="distribution-rights">
+          <input id="distribution-rights" name="distributionRights" type="checkbox" required />
+          <span>Saya telah memeriksa hak distribusi atau izin untuk memproses buku ini. <span aria-hidden="true">*</span></span>
+        </label>
+        <p class="field__help">Manifest draft tetap bukan izin publikasi.</p>
+      </fieldset>
+
+      <section class="import-preview" aria-labelledby="import-preview-title">
+        <div class="import-preview__head">
+          <div>
+            <p class="import-workbench__kicker">Pratinjau sebelum unggah</p>
+            <h2 id="import-preview-title">Yang akan masuk ke katalog</h2>
+          </div>
+          <p>Pratinjau ini hanya memakai berkas di perangkat Anda dan belum mengunggah apa pun.</p>
+        </div>
+        <div class="import-preview__body">
+          <div class="import-preview__cover">
+            <img id="preview-cover-image" alt="Pratinjau sampul buku" hidden />
+            <span id="preview-cover-empty" aria-hidden="true">Sampul belum dipilih</span>
+          </div>
+          <dl class="import-preview__metadata">
+            <div><dt>Judul</dt><dd id="preview-title">Belum diisi</dd></div>
+            <div><dt>Penulis</dt><dd id="preview-author">Belum diisi</dd></div>
+            <div><dt>Kategori</dt><dd id="preview-category">Belum dipilih</dd></div>
+            <div><dt>EPUB</dt><dd id="preview-epub">Belum dipilih</dd></div>
+            <div class="import-preview__description"><dt>Keterangan</dt><dd id="preview-description">Belum diisi</dd></div>
+          </dl>
+        </div>
+      </section>
+
+      <div class="import-form__action">
+        <div>
+          <p class="import-form__state" id="form-state" aria-live="polite">
+            Belum ada berkas atau metadata yang diunggah.
+          </p>
+          <p class="import-form__privacy">Draft bersifat privat dan belum dapat dibaca pengunjung.</p>
+        </div>
+        <button type="submit">Unggah sebagai draft</button>
+      </div>
+      <div class="upload-progress" id="upload-progress" hidden aria-live="polite">
+        <div><strong id="upload-progress-label">Menyiapkan upload</strong><span id="upload-progress-percent">0%</span></div>
+        <progress id="upload-progress-bar" value="0" max="100">0%</progress>
+        <p id="upload-progress-detail">Persentase akan muncul saat berkas dikirim ke storage.</p>
+      </div>
+    </form>
+  </main>
+</BaseLayout>
+
+<script>
+  const form = document.querySelector<HTMLFormElement>("#import-form")!;
+  const state = document.querySelector<HTMLElement>("#form-state")!;
+  const epubInput = document.querySelector<HTMLInputElement>("#epub-file")!;
+  const coverInput = document.querySelector<HTMLInputElement>("#cover-file")!;
+  const epubHelp = document.querySelector<HTMLElement>("#epub-help")!;
+  const coverHelp = document.querySelector<HTMLElement>("#cover-help")!;
+  const submitButton = form.querySelector<HTMLButtonElement>('button[type="submit"]')!;
+  const previewTitle = document.querySelector<HTMLElement>("#preview-title")!;
+  const previewAuthor = document.querySelector<HTMLElement>("#preview-author")!;
+  const previewCategory = document.querySelector<HTMLElement>("#preview-category")!;
+  const previewEpub = document.querySelector<HTMLElement>("#preview-epub")!;
+  const previewDescription = document.querySelector<HTMLElement>("#preview-description")!;
+  const previewCoverImage = document.querySelector<HTMLImageElement>("#preview-cover-image")!;
+  const previewCoverEmpty = document.querySelector<HTMLElement>("#preview-cover-empty")!;
+  const uploadProgress = document.querySelector<HTMLElement>("#upload-progress")!;
+  const uploadProgressLabel = document.querySelector<HTMLElement>("#upload-progress-label")!;
+  const uploadProgressPercent = document.querySelector<HTMLElement>("#upload-progress-percent")!;
+  const uploadProgressBar = document.querySelector<HTMLProgressElement>("#upload-progress-bar")!;
+  const uploadProgressDetail = document.querySelector<HTMLElement>("#upload-progress-detail")!;
+  let coverPreviewUrl = "";
+
+  const formatBytes = (size: number) => {
+    if (size < 1024 * 1024) return `${Math.ceil(size / 1024)} KB`;
+    return `${(size / (1024 * 1024)).toFixed(1)} MB`;
+  };
+
+  const showFileStatus = (
+    input: HTMLInputElement,
+    helper: HTMLElement,
+    acceptedExtensions: string[],
+    emptyMessage: string,
+  ) => {
+    const file = input.files?.[0];
+
+    if (!file) {
+      input.setCustomValidity("");
+      helper.textContent = emptyMessage;
+      helper.dataset.state = "default";
+      return;
+    }
+
+    const extension = `.${file.name.split(".").pop()?.toLowerCase()}`;
+    if (!acceptedExtensions.includes(extension)) {
+      input.setCustomValidity(`Format ${extension} tidak didukung.`);
+      helper.textContent = `Format ${extension} tidak didukung. Pilih ${acceptedExtensions.join(" atau ")}.`;
+      helper.dataset.state = "error";
+      return;
+    }
+
+    input.setCustomValidity("");
+    helper.textContent = `${file.name} · ${formatBytes(file.size)}`;
+    helper.dataset.state = "success";
+  };
+
+  epubInput.addEventListener("change", () => {
+    showFileStatus(epubInput, epubHelp, [".epub"], "Pilih satu berkas berekstensi .epub.");
+    updatePreview();
+  });
+
+  coverInput.addEventListener("change", () => {
+    showFileStatus(coverInput, coverHelp, [".jpg", ".jpeg", ".png", ".webp"], "Opsional: JPG, PNG, atau WebP.");
+    updatePreview();
+  });
+
+  form.addEventListener("input", (event) => {
+    if (event.target instanceof HTMLInputElement || event.target instanceof HTMLSelectElement || event.target instanceof HTMLTextAreaElement) {
+      event.target.removeAttribute("aria-invalid");
+    }
+    updatePreview();
+  });
+
+  const updateProgress = (percentage: number, detail: string) => {
+    const safePercentage = Math.max(0, Math.min(100, Math.round(percentage)));
+    uploadProgress.hidden = false;
+    uploadProgressBar.value = safePercentage;
+    uploadProgressPercent.textContent = `${safePercentage}%`;
+    uploadProgressDetail.textContent = detail;
+  };
+
+  const updatePreview = () => {
+    const title = form.elements.namedItem("title") as HTMLInputElement;
+    const author = form.elements.namedItem("author") as HTMLInputElement;
+    const category = form.elements.namedItem("category") as HTMLSelectElement;
+    const description = form.elements.namedItem("description") as HTMLTextAreaElement;
+    const epub = epubInput.files?.[0];
+    const cover = coverInput.files?.[0];
+
+    previewTitle.textContent = title.value.trim() || "Belum diisi";
+    previewAuthor.textContent = author.value.trim() || "Belum diisi";
+    previewCategory.textContent = category.selectedOptions[0]?.textContent || "Belum dipilih";
+    previewEpub.textContent = epub ? `${epub.name} · ${formatBytes(epub.size)}` : "Belum dipilih";
+    previewDescription.textContent = description.value.trim() || "Belum diisi";
+
+    if (cover) {
+      if (coverPreviewUrl) URL.revokeObjectURL(coverPreviewUrl);
+      coverPreviewUrl = URL.createObjectURL(cover);
+      previewCoverImage.src = coverPreviewUrl;
+      previewCoverImage.hidden = false;
+      previewCoverEmpty.hidden = true;
+      return;
+    }
+
+    if (coverPreviewUrl) URL.revokeObjectURL(coverPreviewUrl);
+    coverPreviewUrl = "";
+    previewCoverImage.removeAttribute("src");
+    previewCoverImage.hidden = true;
+    previewCoverEmpty.hidden = false;
+  };
+
+  const uploadDraft = (data: FormData) => new Promise<{ error?: string; slug?: string; managementUrl?: string; message?: string }>((resolve, reject) => {
+    const request = new XMLHttpRequest();
+    request.open("POST", "/api/admin/import");
+    request.responseType = "json";
+    request.upload.addEventListener("progress", (event) => {
+      if (!event.lengthComputable) {
+        updateProgress(0, "Mengirim berkas ke storage…");
+        return;
+      }
+      updateProgress((event.loaded / event.total) * 100, `Mengunggah ${formatBytes(event.loaded)} dari ${formatBytes(event.total)}…`);
+    });
+    request.addEventListener("load", () => {
+      const payload = request.response || JSON.parse(request.responseText || "{}");
+      if (request.status >= 200 && request.status < 300) {
+        updateProgress(100, "Berkas tersimpan. Menyiapkan halaman tinjauan…");
+        resolve(payload);
+        return;
+      }
+      reject(new Error(payload.error || "Draft tidak dapat diunggah."));
+    });
+    request.addEventListener("error", () => reject(new Error("Koneksi upload terputus. Coba lagi.")));
+    request.send(data);
+  });
+
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    showFileStatus(epubInput, epubHelp, [".epub"], "Pilih satu berkas berekstensi .epub.");
+    showFileStatus(coverInput, coverHelp, [".jpg", ".jpeg", ".png", ".webp"], "Opsional: JPG, PNG, atau WebP.");
+
+    if (!form.checkValidity()) {
+      form.classList.add("is-invalid");
+      form.querySelectorAll<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>("input, select, textarea").forEach((field) => {
+        field.toggleAttribute("aria-invalid", !field.validity.valid);
+      });
+      state.textContent = "Draft belum diunggah. Lengkapi bidang wajib dan perbaiki berkas yang ditandai.";
+      state.dataset.state = "error";
+      form.querySelector<HTMLElement>(":invalid")?.focus();
+      return;
+    }
+
+    form.classList.remove("is-invalid");
+    submitButton.disabled = true;
+    submitButton.dataset.state = "loading";
+    submitButton.textContent = "Mengunggah draft…";
+    state.textContent = "Memeriksa metadata dan mengunggah berkas ke storage…";
+    state.dataset.state = "default";
+    uploadProgressLabel.textContent = "Mengunggah EPUB";
+    updateProgress(0, "Menyiapkan berkas untuk dikirim…");
+    await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+    const data = new FormData(form);
+    const epub = epubInput.files?.[0];
+    if (!epub) {
+      state.textContent = "Draft belum diunggah. Pilih satu berkas EPUB.";
+      state.dataset.state = "error";
+      submitButton.disabled = false;
+      submitButton.dataset.state = "error";
+      submitButton.textContent = "Unggah sebagai draft";
+      return;
+    }
+    try {
+      const payload = await uploadDraft(data);
+
+      state.textContent = payload.message || `Draft “${payload.slug}” tersimpan di S3. EPUB belum diterbitkan.`;
+      state.dataset.state = "success";
+      submitButton.dataset.state = "success";
+      submitButton.textContent = "Draft berhasil diunggah";
+      form.reset();
+      showFileStatus(epubInput, epubHelp, [".epub"], "Pilih satu berkas berekstensi .epub.");
+      showFileStatus(coverInput, coverHelp, [".jpg", ".jpeg", ".png", ".webp"], "Opsional: JPG, PNG, atau WebP.");
+      updatePreview();
+      if (payload.managementUrl) window.setTimeout(() => window.location.assign(payload.managementUrl!), 650);
+    } catch (error) {
+      state.textContent = error instanceof Error ? error.message : "Draft tidak dapat diunggah.";
+      state.dataset.state = "error";
+      submitButton.dataset.state = "error";
+      submitButton.textContent = "Coba unggah lagi";
+      uploadProgressLabel.textContent = "Upload belum selesai";
+      uploadProgressDetail.textContent = "Tidak ada berkas yang diterbitkan. Periksa pesan kesalahan lalu coba lagi.";
+    } finally {
+      submitButton.disabled = false;
+    }
+  });
+</script>

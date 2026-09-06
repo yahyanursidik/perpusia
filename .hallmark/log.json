@@ -1,0 +1,44 @@
+[
+  {
+    "date": "2026-09-06",
+    "macrostructure": "Marquee Hero",
+    "theme": "Newsprint (existing system)",
+    "enrichment": "E2 catalogue-cover stage",
+    "brief": "Homepage hero with a real library cover, search, gentle motion, and responsive editorial layout"
+  },
+  {
+    "date": "2026-09-06",
+    "macrostructure": "Registry",
+    "theme": "Newsprint (existing system)",
+    "enrichment": "none",
+    "brief": "Responsive local admin registry for editing, publishing, and archiving EPUB entries"
+  },
+  {
+    "date": "2026-09-06",
+    "macrostructure": "Reader Desk",
+    "theme": "Newsprint (existing system)",
+    "enrichment": "none",
+    "brief": "Responsive EPUB reading desk with progress, type controls, and device-aware navigation"
+  },
+  {
+    "date": "2026-09-06",
+    "macrostructure": "Workbench",
+    "theme": "Newsprint (existing system)",
+    "enrichment": "none",
+    "brief": "Local admin draft-import form for EPUB metadata and cover validation"
+  },
+  {
+    "date": "2026-09-05",
+    "macrostructure": "Catalogue",
+    "theme": "Newsprint (existing system)",
+    "enrichment": "typographic mock covers",
+    "brief": "Content collection, library, category, and detail routes for Phase 0 Step 2"
+  },
+  {
+    "date": "2026-09-05",
+    "macrostructure": "Long Document",
+    "theme": "Newsprint",
+    "enrichment": "none",
+    "brief": "Bootstrap homepage for an Islamic digital reading library"
+  }
+]

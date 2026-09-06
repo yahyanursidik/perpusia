@@ -1,0 +1,14 @@
+node_modules/
+.pnpm-store/
+dist/
+.astro/
+.vercel/
+.env
+.env.*
+!.env.example
+*.log
+
+# Binary book assets belong in object storage, never in Git.
+*.epub
+*.pdf
+draft/

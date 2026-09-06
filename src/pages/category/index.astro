@@ -1,0 +1,43 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { getCategoryLabel } from "../../lib/books/categories";
+import { getBooksByCategory, getUsedCategories, getVisibleBooks } from "../../lib/books/queries";
+import "../../styles/catalogue.css";
+
+const books = await getVisibleBooks();
+const categories = getUsedCategories(books);
+---
+
+<BaseLayout
+  title="Kategori — Perpustakaan Islam Digital"
+  description="Jelajahi buku berdasarkan kategori."
+>
+  <section class="catalogue-shell" aria-labelledby="categories-title">
+    <header class="catalogue-head">
+      <div>
+        <p class="catalogue-count">{categories.length} kategori aktif</p>
+        <h1 id="categories-title">Jelajahi topik</h1>
+      </div>
+      <p>Kategori adalah pintu masuk utama ketika pembaca belum mengetahui judul buku yang dicari.</p>
+    </header>
+
+    {categories.length > 0 ? (
+      <ul class="category-index">
+        {categories.map((category) => (
+          <li>
+            <a href={`/category/${category}/`}>
+              <strong>{getCategoryLabel(category)}</strong>
+              <span>{getBooksByCategory(books, category).length} buku</span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    ) : (
+      <div class="empty-state">
+        <h2>Belum ada kategori aktif.</h2>
+        <p>Kategori akan tampil setelah metadata buku tersedia.</p>
+        <a class="text-link" href="/library/">Buka perpustakaan</a>
+      </div>
+    )}
+  </section>
+</BaseLayout>
