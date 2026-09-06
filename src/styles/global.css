@@ -922,8 +922,8 @@ html[data-accessibility-mode="contrast"] {
     .app-frame { display: grid; grid-template-columns: 16rem minmax(0, 1fr); }
     .app-sidebar { min-height: 100dvh; position: sticky; inset-block-start: 0; display: flex; flex-direction: column; padding: var(--space-xl) var(--space-md); border-inline-end: var(--rule-thin) solid var(--color-rule); background: color-mix(in oklch, var(--color-paper) 92%, var(--color-paper-raised)); }
     .app-brand { display: flex; align-items: center; gap: var(--space-sm); margin: var(--space-xs) var(--space-sm) var(--space-3xl); color: var(--color-ink); font-family: var(--font-display); font-size: 1.2rem; font-weight: 600; line-height: 1.05; text-decoration: none; }
-    .app-brand__mark { width: 3.25rem; height: 3.25rem; display: grid; place-items: center; border-radius: var(--radius-md); background: var(--color-accent); color: var(--color-accent-ink); }
-    .app-brand__mark svg { width: 2rem; height: 2rem; }
+    .app-brand__mark { position: relative; width: 3.25rem; height: 3.25rem; flex: 0 0 auto; overflow: hidden; }
+    .app-brand__mark img { position: absolute; inset-block-start: 0; inset-inline-start: 50%; width: 7.2rem; max-width: none; height: auto; transform: translate(-50%, -0.65rem); mix-blend-mode: multiply; }
     .app-nav { display: grid; gap: var(--space-2xs); }
     .app-nav a { min-height: 2.75rem; display: flex; align-items: center; gap: var(--space-md); padding-inline: var(--space-sm); border-radius: var(--radius-sm); color: var(--color-ink-soft); font-size: var(--text-sm); font-weight: 650; text-decoration: none; white-space: nowrap; }
     .app-nav a > span { width: 1.25rem; color: var(--color-ink); font-size: 1.25rem; text-align: center; }
