@@ -77,13 +77,28 @@ const categoryLabel = getCategoryLabel(book.data.categories[0]!);
   const loadingMessage = document.querySelector<HTMLElement>("#reader-loading-message")!;
   const epubUrl = reader.dataset.epubUrl;
   const fontStorageKey = "perpustakaan-reader-font-scale";
+  const epubLoadTimeoutMs = 25_000;
 
   void (async () => {
     if (!epubUrl) throw new Error("Alamat EPUB tidak ditemukan.");
 
     try {
+    const controller = new AbortController();
+    const timeout = window.setTimeout(() => controller.abort(), epubLoadTimeoutMs);
+    let response: Response;
+    try {
+      response = await fetch(epubUrl, { signal: controller.signal });
+    } finally {
+      window.clearTimeout(timeout);
+    }
+    if (!response.ok) throw new Error(`Server mengembalikan status ${response.status}.`);
+
+    const epubData = await response.arrayBuffer();
+    if (epubData.byteLength < 100) throw new Error("Berkas EPUB yang diterima tidak valid.");
+
     const { default: ePub } = await import("epubjs");
-    const book = ePub(epubUrl);
+    const book = ePub(epubData);
+    await book.ready;
     const rendition = book.renderTo(reader, { flow: "paginated", height: "100%", manager: "default", width: "100%" });
     let fontScale = 100;
     try { fontScale = Number(window.localStorage.getItem(fontStorageKey)) || 100; } catch { /* Preferensi lokal dapat dibatasi browser. */ }
@@ -132,12 +147,15 @@ const categoryLabel = getCategoryLabel(book.data.categories[0]!);
       rendition.destroy();
       book.destroy();
     }, { once: true });
-    } catch {
+    } catch (error) {
+      const timedOut = error instanceof DOMException && error.name === "AbortError";
       status.textContent = "EPUB tidak dapat dimuat dari storage. Coba muat ulang beberapa saat lagi.";
       status.dataset.state = "error";
       loading.dataset.state = "error";
       loadingTitle.textContent = "EPUB belum dapat dibuka";
-      loadingMessage.textContent = "Coba muat ulang beberapa saat lagi.";
+      loadingMessage.textContent = timedOut
+        ? "Koneksi ke storage terlalu lama. Coba muat ulang beberapa saat lagi."
+        : "Periksa koneksi atau coba muat ulang beberapa saat lagi.";
     }
   })();
 </script>
