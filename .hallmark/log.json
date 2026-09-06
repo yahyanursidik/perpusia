@@ -1,6 +1,13 @@
 [
   {
     "date": "2026-09-06",
+    "macrostructure": "Ecosystem Index",
+    "theme": "Newsprint (existing system)",
+    "enrichment": "compact catalogue-cover stage",
+    "brief": "Mobile-first homepage discovery with compact search, rails, and thumb-friendly collection cards"
+  },
+  {
+    "date": "2026-09-06",
     "macrostructure": "Marquee Hero",
     "theme": "Newsprint (existing system)",
     "enrichment": "E2 catalogue-cover stage",

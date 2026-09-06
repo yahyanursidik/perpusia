@@ -44,6 +44,103 @@
       "related": [],
       "mock": false,
       "preview": false
+    },
+    "10-hak-dalam-islam": {
+      "id": "cd471db2-9db9-455e-af6b-0961db63dd53",
+      "slug": "10-hak-dalam-islam",
+      "title": "10 Hak dalam Islam",
+      "authors": [
+        "Syaikh Muhammad bin Shalih al-Utsaimin"
+      ],
+      "categories": [
+        "adab-akhlak"
+      ],
+      "tags": [
+        "hak",
+        "adab"
+      ],
+      "language": [
+        "Bahasa Indonesia"
+      ],
+      "description": "Amalkan Islam secara kaffah dengan memahami 10 hak fundamental yang wajib kita tunaikan! Mulai dari hak Allah, Rasulullah, hingga hak sesama muslim dan non-muslim, semua dibahas tuntas oleh Syaikh Muhammad bin Shalih al-'Utsaimin.",
+      "source": {
+        "publisher": "Belum diverifikasi",
+        "pageUrl": "https://bagi.to/10hakdalamislam/",
+        "originalPdfUrl": "https://bagi.to/10hakdalamislam/"
+      },
+      "storage": {
+        "cover": "/images/books/10-hak-dalam-islam.jpg",
+        "epub": "published/books/10-hak-dalam-islam/versions/1.0.0/book.epub"
+      },
+      "edition": {
+        "label": "Belum diverifikasi",
+        "year": ""
+      },
+      "reading": {
+        "wordCount": 0,
+        "estimatedMinutes": 0
+      },
+      "conversion": {
+        "version": "Calibre 9.0.0"
+      },
+      "verification": {
+        "status": "needs-review",
+        "notes": "Diterbitkan sebagai entri katalog atas permintaan editor. Penulis diambil dari teks pada sampul; OPF Calibre masih berisi Unknown/en dan sumber bibliografi perlu dilengkapi."
+      },
+      "publication": {
+        "status": "published"
+      },
+      "related": [],
+      "mock": false,
+      "preview": false
+    },
+    "e-book-10-prinsip-dalam-menuntut-ilmu": {
+      "id": "35e5f451-7b31-4672-a196-4afd0e821864",
+      "slug": "e-book-10-prinsip-dalam-menuntut-ilmu",
+      "title": "E-book 10 Prinsip dalam Menuntut Ilmu",
+      "authors": [
+        "Yusuf Abu Ubaidah as-Sidawi"
+      ],
+      "contributors": {
+        "translators": [],
+        "reviewers": []
+      },
+      "categories": [
+        "adab-akhlak"
+      ],
+      "tags": [],
+      "language": [
+        "Bahasa Indonesia"
+      ],
+      "description": "sds",
+      "source": {
+        "publisher": "Belum diverifikasi"
+      },
+      "storage": {
+        "epub": "draft/books/e-book-10-prinsip-dalam-menuntut-ilmu/epub/book.epub",
+        "cover": "draft/books/e-book-10-prinsip-dalam-menuntut-ilmu/cover/cover.jpg"
+      },
+      "edition": {
+        "label": "Belum diverifikasi",
+        "year": ""
+      },
+      "reading": {
+        "wordCount": 0,
+        "estimatedMinutes": 0
+      },
+      "conversion": {
+        "version": "uploaded-epub/v1"
+      },
+      "verification": {
+        "status": "published",
+        "notes": "Diunggah melalui form admin lokal dan menunggu tinjauan editorial."
+      },
+      "publication": {
+        "status": "published"
+      },
+      "related": [],
+      "mock": false,
+      "preview": false
     }
   },
   "deletedSlugs": [

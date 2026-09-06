@@ -7,7 +7,10 @@ import { getPublicAssetUrl } from "../lib/storage/public-url";
 
 const books = await getVisibleBooks();
 const categories = getUsedCategories(books);
-const heroBook = books.find(({ data }) => Boolean(data.storage.cover)) ?? books[0];
+const publishedHeroBooks = books.filter(({ data }) => data.publication.status === "published" && Boolean(data.storage.cover));
+const heroBook = publishedHeroBooks.length > 0
+  ? publishedHeroBooks[Math.floor(Math.random() * publishedHeroBooks.length)]
+  : books.find(({ data }) => data.publication.status === "published") ?? books[0];
 const heroCoverUrl = getPublicAssetUrl(heroBook?.data.storage.cover);
 const principles = [
   {
@@ -35,7 +38,7 @@ const principles = [
         <p class="home-hero__eyebrow">Akses ilmu, manfaat tanpa henti</p>
         <h1 id="hero-title">Perpustakaan Digital Islam</h1>
         <p class="hero__summary">
-          Temukan, baca, dan lanjutkan bacaan dari koleksi yang sedang dibangun dengan metadata yang dapat ditinjau.
+          Temukan, baca, dan lanjutkan bacaan dengan tampilan EPUB dari koleksi yang sedang dibangun dengan metadata yang dapat ditinjau.
         </p>
         <form class="home-hero__search" action="/library/" method="get">
           <label for="hero-search" class="sr-only">Cari buku di perpustakaan</label>
@@ -92,17 +95,5 @@ const principles = [
       </ol>
     </section>
 
-    <aside id="status" class="phase-note" aria-labelledby="status-title">
-      <div class="phase-note__inner">
-      <div>
-        <h2 id="status-title">Katalog awal sudah tersedia.</h2>
-        <p>
-          Tiga buku demonstrasi memvalidasi struktur metadata, kategori, dan halaman detail. Konten ini belum merupakan koleksi yang dapat dibaca.
-        </p>
-        <a class="text-link" href="/library/">Buka perpustakaan</a>
-      </div>
-      <p class="phase-note__status">Phase 0 · Step 2</p>
-      </div>
-    </aside>
   </article>
 </BaseLayout>

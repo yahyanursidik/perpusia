@@ -72,6 +72,22 @@ const verificationLabel = book.data.verification.status === "verified" ? "Terver
           <h2 id="book-info-title">Informasi buku</h2>
           <dl class="book-facts">
           <div>
+            <dt>Penulis</dt>
+            <dd>{book.data.authors.join(", ")}</dd>
+          </div>
+          {book.data.contributors.translators.length > 0 && (
+            <div>
+              <dt>Alih Bahasa</dt>
+              <dd>{book.data.contributors.translators.join(", ")}</dd>
+            </div>
+          )}
+          {book.data.contributors.reviewers.length > 0 && (
+            <div>
+              <dt>Muraja’ah</dt>
+              <dd>{book.data.contributors.reviewers.join(", ")}</dd>
+            </div>
+          )}
+          <div>
             <dt>Kategori</dt>
             <dd><a href={`/category/${primaryCategory}/`}>{categoryLabel}</a></dd>
           </div>

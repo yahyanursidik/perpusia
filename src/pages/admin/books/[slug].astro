@@ -55,6 +55,16 @@ const statuses = [
               <p class="field__help">Pisahkan beberapa penulis dengan koma.</p>
             </div>
             <div class="field">
+              <label for="translators">Alih bahasa</label>
+              <input id="translators" name="translators" value={book.data.contributors.translators.join(", ")} />
+              <p class="field__help">Opsional. Pisahkan beberapa nama dengan koma.</p>
+            </div>
+            <div class="field">
+              <label for="reviewers">Muraja’ah</label>
+              <input id="reviewers" name="reviewers" value={book.data.contributors.reviewers.join(", ")} />
+              <p class="field__help">Opsional. Pisahkan beberapa nama dengan koma.</p>
+            </div>
+            <div class="field">
               <label for="category">Kategori utama</label>
               <select id="category" name="category" required>
                 {BOOK_CATEGORIES.map((category) => <option value={category} selected={book.data.categories.includes(category)}>{getCategoryLabel(category)}</option>)}
@@ -265,6 +275,8 @@ const statuses = [
         body: JSON.stringify({
           title: data.get("title"),
           authors: list(data.get("authors")),
+          translators: list(data.get("translators")),
+          reviewers: list(data.get("reviewers")),
           categories: [data.get("category")],
           tags: list(data.get("tags")),
           languages: list(data.get("language")),

@@ -310,6 +310,137 @@ html[data-accessibility-mode="contrast"] {
   }
 }
 
+/* Hallmark · macrostructure: Ecosystem Index · genre: editorial · theme: Newsprint (existing system)
+ * mobile focus: search-first discovery rails · nav: existing N3 side-rail / bottom reach-nav · footer: Ft2 inline rule
+ * pre-emit critique: P5 H5 E5 S5 R5 V5 · contrast: pass · mobile: 320 / 375 / 414 / 768
+ */
+@layer components {
+  @media (max-width: 39.99rem) {
+    .home-shell {
+      width: min(100% - 1.5rem, 76rem);
+      padding-block: var(--space-md) var(--space-3xl);
+    }
+
+    .home-hero {
+      gap: var(--space-lg);
+      padding-block: var(--space-md) var(--space-xl);
+    }
+
+    .home-hero__eyebrow {
+      margin-block-end: var(--space-xs);
+      font-size: var(--text-xs);
+      letter-spacing: 0.11em;
+    }
+
+    .home-hero h1 {
+      min-width: 0;
+      max-width: 9ch;
+      margin-block-end: var(--space-md);
+      font-size: clamp(2.6rem, 13vw, 3.6rem);
+      line-height: 0.98;
+      overflow-wrap: anywhere;
+    }
+
+    .home-hero .hero__summary {
+      margin-block-end: var(--space-lg);
+      font-family: var(--font-body);
+      font-size: var(--text-body);
+      line-height: 1.58;
+    }
+
+    .home-hero__search {
+      min-height: 3.5rem;
+      gap: var(--space-xs);
+      padding: var(--space-2xs);
+      box-shadow: none;
+    }
+
+    .home-hero__search > svg { margin-inline-start: var(--space-xs); }
+    .home-hero__search input { font-size: var(--text-sm); }
+    .home-hero__search button { min-height: 3rem; padding-inline: var(--space-md); }
+
+    .home-hero__promises {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: var(--space-xs);
+      margin-block-start: var(--space-lg);
+    }
+
+    .home-hero__promises li {
+      grid-template-columns: 1fr;
+      justify-items: start;
+      gap: var(--space-2xs);
+      min-height: 5rem;
+      padding: var(--space-xs);
+      border-inline-start: var(--rule-thin) solid var(--color-rule);
+    }
+
+    .home-hero__promises li:first-child { border-inline-start: 0; }
+    .home-hero__promises li > span { grid-row: auto; width: 2rem; height: 2rem; font-size: var(--text-xs); }
+    .home-hero__promises strong { font-size: var(--text-xs); line-height: 1.25; }
+    .home-hero__promises small { display: none; }
+
+    .home-hero__visual {
+      min-height: 0;
+      grid-template-columns: minmax(0, 1fr) 7rem;
+      grid-template-areas: "quote shelf" "caption caption";
+      gap: var(--space-md);
+      padding: var(--space-md);
+      border-radius: var(--radius-sm);
+      animation: none;
+    }
+
+    .home-hero__quote { grid-area: quote; align-self: center; }
+    .home-hero__quote p { font-size: clamp(1.2rem, 5.6vw, 1.55rem); }
+    .home-hero__quote span { margin-block-start: var(--space-sm); font-size: var(--text-xs); line-height: 1.4; }
+    .home-hero__shelf { grid-area: shelf; min-height: 9rem; padding-block-end: 0; border-block-end: 0; }
+    .home-hero__shelf-book { display: none; }
+    .home-hero__shelf img { width: 5.75rem; max-height: 8.5rem; box-shadow: var(--space-xs) var(--space-xs) var(--space-md) color-mix(in srgb, var(--color-ink) 18%, transparent); animation: none; }
+    .home-hero__visual figcaption { grid-area: caption; padding-block-start: var(--space-sm); border-block-start: var(--rule-thin) solid var(--color-rule); }
+    .home-hero__visual figcaption a { min-height: 2.75rem; font-size: var(--text-xs); }
+
+    .home-topics,
+    .home-books {
+      padding-block: var(--space-xl);
+    }
+
+    .section-heading {
+      align-items: flex-start;
+      flex-direction: column;
+      gap: var(--space-xs);
+    }
+
+    .section-heading h2 { font-size: clamp(1.65rem, 8vw, 2.15rem); }
+    .section-heading > a,
+    .home-topics > .section-heading > a { min-height: 2.5rem; }
+    .topic-strip { gap: var(--space-xs); margin-block-start: var(--space-md); }
+    .topic-strip a { min-height: 4.5rem; padding: var(--space-sm); }
+    .topic-strip strong { font-size: var(--text-xs); line-height: 1.25; }
+
+    .book-grid--home { gap: var(--space-sm); margin-block-start: var(--space-lg); }
+    .book-grid--home .book-card { grid-template-columns: 5.25rem minmax(0, 1fr); gap: var(--space-sm); padding: var(--space-sm); }
+    .book-grid--home .book-card h2 { margin-block-end: var(--space-2xs); font-size: 1.05rem; }
+    .book-grid--home .book-card p { margin-block-end: var(--space-2xs); font-size: var(--text-xs); line-height: 1.45; }
+    .book-grid--home .book-card__facts { gap: var(--space-2xs) var(--space-sm); font-size: 0.68rem; }
+
+    .foundation { padding-block: var(--space-2xl); }
+    .foundation__intro h2 { margin-block-end: var(--space-md); font-size: clamp(1.75rem, 8vw, 2.25rem); }
+    .principles { margin-block-start: var(--space-xl); }
+    .principles li { gap: var(--space-sm); padding-block: var(--space-md); }
+    .phase-note { margin-block-end: var(--space-2xl); }
+    .phase-note__inner { padding: var(--space-lg) var(--space-md); }
+
+    .app-footer { width: min(100% - 1.5rem, 76rem); }
+  }
+
+  @media (pointer: coarse) {
+    .home-hero__search button,
+    .home-hero__visual figcaption a,
+    .topic-strip a,
+    .book-grid--home .book-card__cover-link,
+    .book-grid--home .book-card h2 a { min-height: 2.75rem; }
+  }
+}
+
 /* Hallmark · macrostructure: responsive app navigation · tone: calm editorial · anchor hue: forest green
  * pre-emit critique: P5 H5 E5 S5 R5 V5 · reference-led: existing library app
  * contrast: pass · keyboard: pass · mobile/tablet: pass
@@ -807,6 +938,24 @@ html[data-accessibility-mode="contrast"] {
     .home-hero { grid-template-columns: minmax(0, 1.1fr) minmax(18rem, 0.9fr); align-items: stretch; gap: var(--space-2xl); }
     .topic-strip { grid-template-columns: repeat(4, minmax(0, 1fr)); }
     .book-grid--home { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  }
+}
+
+/* Mobile catalogue rail: keep the reading column wide enough for real metadata. */
+@layer components {
+  @media (max-width: 41.99rem) {
+    .book-grid--home {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .book-grid--home .book-card {
+      grid-template-columns: 5.25rem minmax(0, 1fr);
+    }
+
+    .book-grid--home .book-card__meta,
+    .book-grid--home .book-card__facts {
+      min-width: 0;
+    }
   }
 }
 

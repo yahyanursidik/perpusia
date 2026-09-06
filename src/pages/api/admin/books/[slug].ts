@@ -37,6 +37,8 @@ export const PATCH: APIRoute = async ({ params, request }) => {
 
   const title = text(payload.title, 160);
   const authors = textList(payload.authors, 8);
+  const translators = textList(payload.translators, 8);
+  const reviewers = textList(payload.reviewers, 8);
   const categories = textList(payload.categories, 4);
   const tags = textList(payload.tags, 16);
   const languages = textList(payload.languages, 4);
@@ -65,6 +67,7 @@ export const PATCH: APIRoute = async ({ params, request }) => {
     ...book.data,
     title,
     authors,
+    contributors: { translators, reviewers },
     categories: categories as (typeof BOOK_CATEGORIES)[number][],
     tags,
     language: languages,

@@ -4,6 +4,7 @@ import { resolve } from "node:path";
 import type { BookEntry } from "./queries";
 
 export type BookData = BookEntry["data"];
+type LegacyBookData = Omit<BookData, "contributors"> & { contributors?: BookData["contributors"] };
 
 type CatalogRegistry = {
   version: 1;
@@ -63,15 +64,18 @@ export async function getAdminBooks(
 
   const localEntries = await Promise.all(contentBooks.map(async ({ data }) => {
     if (deleted.has(data.slug) || !await hasBookContent(data.slug)) return undefined;
-    return { data };
+    return { data: normalizeBookData(data) };
   }));
   localEntries.forEach((entry) => {
     if (entry) entries.set(entry.data.slug, entry);
   });
   supplementalBooks.forEach((data) => {
-    if (!deleted.has(data.slug)) entries.set(data.slug, { data });
+    if (!deleted.has(data.slug)) entries.set(data.slug, { data: normalizeBookData(data) });
   });
-  Object.values(registry.books).forEach((data) => entries.set(data.slug, { data }));
+  Object.values(registry.books).forEach((data) => {
+    const normalized = normalizeBookData(data);
+    entries.set(normalized.slug, { data: normalized });
+  });
 
   return [...entries.values()].toSorted((a, b) => a.data.title.localeCompare(b.data.title, "id"));
 }
@@ -134,6 +138,9 @@ function serializeBook(data: BookData): string {
     scalar("slug", data.slug),
     scalar("title", data.title),
     ...stringArray("authors", data.authors),
+    "contributors:",
+    ...nestedStringArray("translators", data.contributors.translators),
+    ...nestedStringArray("reviewers", data.contributors.reviewers),
     ...stringArray("categories", data.categories),
     ...stringArray("tags", data.tags),
     ...stringArray("language", data.language),
@@ -173,6 +180,17 @@ function serializeBook(data: BookData): string {
   return `${lines.join("\n")}\n`;
 }
 
+function normalizeBookData(data: BookData | LegacyBookData): BookData {
+  const contributors = data.contributors;
+  return {
+    ...data,
+    contributors: {
+      translators: contributors?.translators ?? [],
+      reviewers: contributors?.reviewers ?? [],
+    },
+  };
+}
+
 function scalar(key: string, value: string): string {
   return `${key}: ${JSON.stringify(value)}`;
 }
@@ -185,4 +203,10 @@ function stringArray(key: string, values: readonly string[]): string[] {
   return values.length === 0
     ? [`${key}: []`]
     : [`${key}:`, ...values.map((value) => `  - ${JSON.stringify(value)}`)];
+}
+
+function nestedStringArray(key: string, values: readonly string[]): string[] {
+  return values.length === 0
+    ? [`  ${key}: []`]
+    : [`  ${key}:`, ...values.map((value) => `    - ${JSON.stringify(value)}`)];
 }

@@ -87,6 +87,7 @@ export const POST: APIRoute = async ({ request }) => {
     slug,
     title,
     authors: author.split(",").map((value) => value.trim()).filter(Boolean),
+    contributors: { translators: [], reviewers: [] },
     categories: [category as BookCategory],
     tags: [],
     language: [language],

@@ -1,37 +1,37 @@
 ---
-id: cd471db2-9db9-455e-af6b-0961db63dd53
-slug: 10-hak-dalam-islam
-title: 10 Hak dalam Islam
+id: "cd471db2-9db9-455e-af6b-0961db63dd53"
+slug: "10-hak-dalam-islam"
+title: "10 Hak dalam Islam"
 authors:
-  - Syaikh Muhammad bin Shalih al-Utsaimin
+  - "Syaikh Muhammad bin Shalih al-Utsaimin"
 categories:
-  - adab-akhlak
+  - "adab-akhlak"
 tags:
-  - hak
-  - adab
+  - "hak"
+  - "adab"
 language:
-  - Bahasa Indonesia
-description: >-
-  Entri pratinjau untuk EPUB berjudul 10 Hak dalam Islam dari koleksi Calibre lokal.
-  Sumber penerbitan dan metadata bibliografisnya masih menunggu verifikasi editorial.
+  - "Bahasa Indonesia"
+description: "Amalkan Islam secara kaffah dengan memahami 10 hak fundamental yang wajib kita tunaikan! Mulai dari hak Allah, Rasulullah, hingga hak sesama muslim dan non-muslim, semua dibahas tuntas oleh Syaikh Muhammad bin Shalih al-'Utsaimin."
 source:
-  publisher: Belum diverifikasi
+  publisher: "Belum diverifikasi"
+  pageUrl: "https://bagi.to/10hakdalamislam/"
+  originalPdfUrl: "https://bagi.to/10hakdalamislam/"
 storage:
-  cover: /images/books/10-hak-dalam-islam.jpg
-  epub: published/books/10-hak-dalam-islam/versions/1.0.0/book.epub
+  cover: "/images/books/10-hak-dalam-islam.jpg"
+  epub: "published/books/10-hak-dalam-islam/versions/1.0.0/book.epub"
 edition:
-  label: Belum diverifikasi
+  label: "Belum diverifikasi"
   year: ""
 reading:
   wordCount: 0
   estimatedMinutes: 0
 conversion:
-  version: Calibre 9.0.0
+  version: "Calibre 9.0.0"
 verification:
-  status: needs-review
-  notes: Diterbitkan sebagai entri katalog atas permintaan editor. Penulis diambil dari teks pada sampul; OPF Calibre masih berisi Unknown/en dan sumber bibliografi perlu dilengkapi.
+  status: "needs-review"
+  notes: "Diterbitkan sebagai entri katalog atas permintaan editor. Penulis diambil dari teks pada sampul; OPF Calibre masih berisi Unknown/en dan sumber bibliografi perlu dilengkapi."
 publication:
-  status: published
+  status: "published"
 related: []
 mock: false
 preview: false

@@ -14,6 +14,8 @@ const epubKey = book.data.storage.epub;
 if (!epubKey) throw new Error("EPUB tidak tersedia untuk buku ini.");
 const epubUrl = `/api/books/${book.data.slug}/book.epub`;
 const categoryLabel = getCategoryLabel(book.data.categories[0]!);
+const originalPdfUrl = book.data.source.originalPdfUrl;
+const contributors = book.data.contributors;
 ---
 
 <BaseLayout title={`Baca ${book.data.title} — Perpustakaan Islam Digital`} description={`Pembaca EPUB untuk ${book.data.title}.`}>
@@ -23,7 +25,13 @@ const categoryLabel = getCategoryLabel(book.data.categories[0]!);
       <BookCover title={book.data.title} category={categoryLabel} mock={book.data.mock} preview={book.data.preview} cover={book.data.storage.cover} />
       <h2>{book.data.title}</h2>
       <p>{book.data.authors.join(", ")}</p>
-      <nav class="reader-sidebar__nav" aria-label="Kontrol pembaca"><a href="#epub-reader">Bacaan</a><a href={`/books/${book.data.slug}/`}>Informasi buku</a></nav>
+      {(contributors.translators.length > 0 || contributors.reviewers.length > 0) && (
+        <dl class="reader-contributors">
+          {contributors.translators.length > 0 && <div><dt>Alih Bahasa</dt><dd>{contributors.translators.join(", ")}</dd></div>}
+          {contributors.reviewers.length > 0 && <div><dt>Muraja’ah</dt><dd>{contributors.reviewers.join(", ")}</dd></div>}
+        </dl>
+      )}
+      <nav class="reader-sidebar__nav" aria-label="Kontrol pembaca"><a href="#epub-reader">Bacaan</a><a href="#reader-source">PDF asli &amp; catatan</a><a href={`/books/${book.data.slug}/`}>Informasi buku</a></nav>
     </aside>
     <div class="reader-main">
       <header class="reader-shell__head">
@@ -32,6 +40,12 @@ const categoryLabel = getCategoryLabel(book.data.categories[0]!);
           <p class="reader-shell__label">Pembaca EPUB</p>
           <h1>{book.data.title}</h1>
           <p>{book.data.authors.join(", ")}</p>
+          {(contributors.translators.length > 0 || contributors.reviewers.length > 0) && (
+            <dl class="reader-contributors reader-contributors--head">
+              {contributors.translators.length > 0 && <div><dt>Alih Bahasa</dt><dd>{contributors.translators.join(", ")}</dd></div>}
+              {contributors.reviewers.length > 0 && <div><dt>Muraja’ah</dt><dd>{contributors.reviewers.join(", ")}</dd></div>}
+            </dl>
+          )}
         </div>
         <div class="reader-type-controls" aria-label="Ukuran teks pembaca">
           <span>Teks</span>
@@ -43,6 +57,14 @@ const categoryLabel = getCategoryLabel(book.data.categories[0]!);
       <section class="epub-reader" aria-label={`Pembaca EPUB ${book.data.title}`}>
         <div class="reader-progress" aria-hidden="true"><span id="reader-progress-bar"></span></div>
         <div id="epub-reader" data-epub-url={epubUrl}></div>
+        <nav class="reader-edge-nav" aria-label="Navigasi halaman dengan sisi pembaca">
+          <button id="reader-edge-prev" type="button" disabled>
+            <span aria-hidden="true">←</span><span>Halaman sebelumnya</span>
+          </button>
+          <button id="reader-edge-next" type="button" disabled>
+            <span>Halaman berikutnya</span><span aria-hidden="true">→</span>
+          </button>
+        </nav>
         <div class="reader-loading" id="reader-loading" role="status" aria-live="polite">
           <span class="reader-loading__mark" aria-hidden="true"><i></i><i></i><i></i></span>
           <div>
@@ -58,6 +80,22 @@ const categoryLabel = getCategoryLabel(book.data.categories[0]!);
         <button id="reader-next" type="button" disabled>Berikutnya →</button>
       </nav>
       <p class="reader-hint">Gunakan tombol navigasi atau tombol panah kiri/kanan pada keyboard.</p>
+      <aside id="reader-source" class="reader-source" aria-labelledby="reader-source-title">
+        <div>
+          <p class="reader-source__label">Sumber rujukan</p>
+          <h2 id="reader-source-title">File PDF asli</h2>
+          {originalPdfUrl ? (
+            <a class="reader-source__link" href={originalPdfUrl} target="_blank" rel="noreferrer">
+              Buka PDF asli <span aria-hidden="true">↗</span>
+            </a>
+          ) : (
+            <p class="reader-source__unavailable">Tautan PDF asli belum ditambahkan oleh pengelola.</p>
+          )}
+        </div>
+        <p class="reader-source__notice">
+          <strong>Catatan konversi.</strong> Tampilan EPUB atau halaman bacaan ini berasal dari PDF yang dikonversi. Pada beberapa bagian, ayat Al-Qur’an, hadis, perkataan sahabat atau sahabiyah, pendapat para ulama, dan teks lain berbahasa Arab asli mungkin tidak terbaca dengan baik. Gunakan PDF asli sebagai rujukan.
+        </p>
+      </aside>
     </div>
   </article>
 </BaseLayout>
@@ -67,6 +105,8 @@ const categoryLabel = getCategoryLabel(book.data.categories[0]!);
   const status = document.querySelector<HTMLElement>("#reader-status")!;
   const previous = document.querySelector<HTMLButtonElement>("#reader-prev")!;
   const next = document.querySelector<HTMLButtonElement>("#reader-next")!;
+  const edgePrevious = document.querySelector<HTMLButtonElement>("#reader-edge-prev")!;
+  const edgeNext = document.querySelector<HTMLButtonElement>("#reader-edge-next")!;
   const smaller = document.querySelector<HTMLButtonElement>("#reader-font-smaller")!;
   const larger = document.querySelector<HTMLButtonElement>("#reader-font-larger")!;
   const fontValue = document.querySelector<HTMLOutputElement>("#reader-font-value")!;
@@ -122,6 +162,8 @@ const categoryLabel = getCategoryLabel(book.data.categories[0]!);
       }
       previous.disabled = Boolean(location.atStart);
       next.disabled = Boolean(location.atEnd);
+      edgePrevious.disabled = previous.disabled;
+      edgeNext.disabled = next.disabled;
     });
     setFontScale(fontScale);
     await rendition.display();
@@ -130,10 +172,14 @@ const categoryLabel = getCategoryLabel(book.data.categories[0]!);
     status.dataset.state = "success";
     previous.disabled = false;
     next.disabled = false;
+    edgePrevious.disabled = false;
+    edgeNext.disabled = false;
     smaller.disabled = fontScale <= 80;
     larger.disabled = fontScale >= 140;
     previous.addEventListener("click", () => void rendition.prev());
     next.addEventListener("click", () => void rendition.next());
+    edgePrevious.addEventListener("click", () => void rendition.prev());
+    edgeNext.addEventListener("click", () => void rendition.next());
     smaller.addEventListener("click", () => setFontScale(fontScale - 10));
     larger.addEventListener("click", () => setFontScale(fontScale + 10));
     window.addEventListener("keydown", (event) => {

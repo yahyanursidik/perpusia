@@ -62,6 +62,7 @@ function toBookData(slug: string, manifest: DraftManifest): BookData | undefined
     slug,
     title,
     authors: author.split(",").map((item) => item.trim()).filter(Boolean),
+    contributors: { translators: [], reviewers: [] },
     categories: [category as BookCategory],
     tags: [],
     language: [language],

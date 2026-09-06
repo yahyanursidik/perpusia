@@ -22,6 +22,10 @@ const books = defineCollection({
     slug: z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/),
     title: z.string().min(1),
     authors: z.array(z.string().min(1)).min(1),
+    contributors: z.object({
+      translators: z.array(z.string().min(1)).default([]),
+      reviewers: z.array(z.string().min(1)).default([]),
+    }).default({ translators: [], reviewers: [] }),
     categories: z.array(z.enum(BOOK_CATEGORIES)).min(1),
     tags: z.array(z.string().min(1)).default([]),
     language: z.array(z.string().min(2)).min(1),
